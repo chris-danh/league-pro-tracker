@@ -21,9 +21,9 @@ class RiotAPIClient:
 
             if summoner:
                 player = Player(puuid = summoner.puuid, game_name = summoner.name
-                                ,tag_line = tag_line, region = region, team = None, role = None
-                                return Player
-                )
+                                ,tag_line = tag_line, region = region, team = None, role = None)
+                return Player
+                
             return None
         except Exception as e:
             return None
