@@ -47,6 +47,8 @@ class Match:
     gold_earned: int
     items: list[int]
     runes: list[int]
+    summoner_spell_d: int
+    summoner_spell_f: int
 
     # skill order -TODO: implement later with timeline data when i want to expand on the project
 

@@ -44,6 +44,8 @@ class DatabaseManager:
                 total_damage INTEGER NOT NULL,
                 vision_score INTEGER NOT NULL,
                 gold_earned INTEGER NOT NULL,
+                summoner_spell_d INTEGER NOT NULL,
+                summoner_spell_f INTEGER NOT NULL,
                 FOREIGN KEY (puuid) REFERENCES players(puuid)
             )
         ''')
@@ -99,7 +101,7 @@ class DatabaseManager:
             ''', (match.match_id, match.puuid, match.champion, match.role,
                   int(match.win), match.kills, match.deaths, match.assists,
                   match.cs, match.game_duration, match.total_damage,
-                  match.vision_score, match.gold_earned))
+                  match.vision_score, match.gold_earned, match.summoner_spell_d, match.summoner_spell_f))
             
             # Save items if present
             if match.items:
