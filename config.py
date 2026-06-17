@@ -11,12 +11,9 @@ RIOT_API_KEY = os.getenv("RIOT_API_KEY", "")
 RATE_LIMIT_REQUESTS = 20
 RATE_LIMIT_SECONDS = 1
 
-# current patch of league
-CURRENT_PATCH = "16.10.1"
-
 # region
 DEFAULT_REGION = "KR"
-REGIONS = ["KR", "CN", "EUW", "NA"]
+REGIONS = ["KR", "EUW", "NA"]
 
 # database
 DATABASE_PATH = "league_data.db"

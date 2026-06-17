@@ -58,7 +58,9 @@ class TestMatch:
             vision_score=45,
             gold_earned=12000,
             items=[3151, 3285, 4645],
-            runes=[8112, 8126, 8138]
+            runes=[8112, 8126, 8138],
+            summoner_spell_d=4,
+            summoner_spell_f=12
         )
                 
         assert match.match_id == "KR_123456"
@@ -273,11 +275,11 @@ class TestIntegration:
         
         # Create multiple matches for the same player
         matches = [
-            Match("match1", "test123", "Ahri", "MIDDLE", True, 10, 2, 8, 250, 1800, 28000, 45, 12000, [], []),
-            Match("match2", "test123", "Ahri", "MIDDLE", True, 8, 3, 10, 230, 1700, 25000, 40, 11000, [], []),
-            Match("match3", "test123", "Ahri", "MIDDLE", False, 5, 6, 4, 200, 1600, 18000, 30, 9000, [], []),
-            Match("match4", "test123", "Zed", "MIDDLE", True, 12, 4, 6, 220, 1750, 26000, 35, 11500, [], []),
-            Match("match5", "test123", "Zed", "MIDDLE", False, 6, 7, 3, 190, 1550, 15000, 25, 8500, [], []),
+            Match("match1", "test123", "Ahri", "MIDDLE", True, 10, 2, 8, 250, 1800, 28000, 45, 12000, [], [], 4, 12),
+            Match("match2", "test123", "Ahri", "MIDDLE", True, 8, 3, 10, 230, 1700, 25000, 40, 11000, [], [], 4, 12),
+            Match("match3", "test123", "Ahri", "MIDDLE", False, 5, 6, 4, 200, 1600, 18000, 30, 9000, [], [], 4, 12),
+            Match("match4", "test123", "Zed", "MIDDLE", True, 12, 4, 6, 220, 1750, 26000, 35, 11500, [], [], 4, 12),
+            Match("match5", "test123", "Zed", "MIDDLE", False, 6, 7, 3, 190, 1550, 15000, 25, 8500, [], [], 4, 12),
         ]
         
         # Manual aggregation (what the database would do)
