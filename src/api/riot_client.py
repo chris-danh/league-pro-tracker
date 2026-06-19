@@ -1,3 +1,4 @@
+# src/api/riot_client.py
 from typing import Optional
 from riotwatcher import LolWatcher, RiotWatcher, ApiError
 from src.models import Player, Match
@@ -19,9 +20,9 @@ class RiotAPIClient:
         self.lol_watcher = LolWatcher(api_key)
         self.riot_watcher = RiotWatcher(api_key)
         
-        # Region mappings 
+        # Region mappings
         self.platform_routing = {
-            "KR": "kr1",
+            "KR": "kr",
             "NA": "na1",
             "EUW": "euw1",
         }
@@ -38,8 +39,8 @@ class RiotAPIClient:
         """
         Get a summoner by Riot ID (game name + tag line).
         
-        Step 1: Get PUUID from Account API
-        Step 2: Get Summoner details using PUUID
+        Step 1: Get PUUID and name from Account API
+        Step 2: Get summoner level using PUUID from Summoner API
         """
         try:
             # Validate region
@@ -47,24 +48,26 @@ class RiotAPIClient:
                 print(f"⚠️ Unsupported region: {region}. Using KR as fallback.")
                 region = "KR"
             
-            # Step 1: Get PUUID using Account API
+            # Step 1: Get account info (contains puuid and gameName)
             regional = self.regional_routing[region]
             account = self.riot_watcher.account.by_riot_id(regional, game_name, tag_line)
-            puuid = account['puuid']
             
-            # Step 2: Get Summoner details using PUUID
+            puuid = account['puuid']
+            account_name = account['gameName']  # This is the summoner name
+            
+            # Step 2: Get summoner level using PUUID
             platform = self.platform_routing[region]
             summoner = self.lol_watcher.summoner.by_puuid(platform, puuid)
             
             player = Player(
                 puuid=puuid,
-                game_name=summoner['name'],
+                game_name=account_name,  # Use name from Account API
                 tag_line=tag_line,
                 region=region,
                 team=None,
                 role=None
             )
-            print(f"✅ Found summoner: {summoner['name']} (Level {summoner['summonerLevel']}) on {region}")
+            print(f"✅ Found summoner: {account_name} (Level {summoner['summonerLevel']}) on {region}")
             return player
             
         except ApiError as err:
@@ -89,7 +92,7 @@ class RiotAPIClient:
             
             platform = self.platform_routing[region]
             
-            # Get match IDs (max 100)
+            # Get match IDs (ranked solo)
             match_ids = self.lol_watcher.match.matchlist_by_puuid(
                 platform, 
                 puuid, 
@@ -99,38 +102,37 @@ class RiotAPIClient:
             
             matches = []
             for match_id in match_ids:
-                # Get full match details
+                # Get match details
                 match_data = self.lol_watcher.match.by_id(platform, match_id)
                 
-                # Find the participant for this player
-                participant_data = None
+                # Find participant for this player
+                participant = None
                 for p in match_data['info']['participants']:
                     if p['puuid'] == puuid:
-                        participant_data = p
+                        participant = p
                         break
                 
-                if not participant_data:
+                if not participant:
                     continue
                 
-                # Extract match data
                 match_obj = Match(
                     match_id=match_id,
                     puuid=puuid,
-                    champion=participant_data['championName'],
-                    role=self._determine_role_from_participant(participant_data),
-                    win=participant_data['win'],
-                    kills=participant_data['kills'],
-                    deaths=participant_data['deaths'],
-                    assists=participant_data['assists'],
-                    cs=participant_data['totalMinionsKilled'],
+                    champion=participant['championName'],
+                    role=self._determine_role_from_participant(participant),
+                    win=participant['win'],
+                    kills=participant['kills'],
+                    deaths=participant['deaths'],
+                    assists=participant['assists'],
+                    cs=participant['totalMinionsKilled'],
                     game_duration=match_data['info']['gameDuration'],
-                    total_damage=participant_data['totalDamageDealtToChampions'],
-                    vision_score=participant_data.get('visionScore', 0),
-                    gold_earned=participant_data['goldEarned'],
-                    items=self._get_items_from_participant(participant_data),
-                    runes=self._get_runes_from_participant(participant_data),
-                    summoner_spell_d=participant_data['summoner1Id'],  # D key
-                    summoner_spell_f=participant_data['summoner2Id']   # F key
+                    total_damage=participant['totalDamageDealtToChampions'],
+                    vision_score=participant.get('visionScore', 0),
+                    gold_earned=participant['goldEarned'],
+                    items=self._get_items_from_participant(participant),
+                    runes=self._get_runes_from_participant(participant),
+                    summoner_spell_d=participant['summoner1Id'],
+                    summoner_spell_f=participant['summoner2Id']
                 )
                 matches.append(match_obj)
             
@@ -141,7 +143,7 @@ class RiotAPIClient:
             print(f"❌ API error fetching matches: {err}")
             return []
         except Exception as e:
-            print(f"❌ Error fetching matches for PUUID {puuid} on {region}: {e}")
+            print(f"❌ Error fetching matches: {e}")
             return []
 
     def get_player_with_matches(
@@ -163,14 +165,13 @@ class RiotAPIClient:
     def test_connection(self, test_region: str = "KR") -> bool:
         """Test if the API key works by fetching a known summoner."""
         try:
-            # Validate region
             if test_region not in self.regional_routing:
                 test_region = "KR"
             
             regional = self.regional_routing[test_region]
             account = self.riot_watcher.account.by_riot_id(regional, "Hide on bush", "KR1")
             if account:
-                print(f"✅ API connection successful! Found account")
+                print(f"✅ API connection successful!")
                 return True
             return False
         except ApiError as err:
@@ -186,11 +187,9 @@ class RiotAPIClient:
 
     def _determine_role_from_participant(self, participant: dict) -> str:
         """Determine role from participant data."""
-        # individualPosition is the most accurate
         if participant.get('individualPosition'):
             return participant['individualPosition']
         
-        # Fallback to lane + teamPosition
         lane = participant.get('lane', '')
         role = participant.get('teamPosition', '')
         
@@ -227,31 +226,3 @@ class RiotAPIClient:
                     runes.append(rune_id)
         
         return runes
-
-    def get_current_patch(self, region: str = "KR") -> str:
-        """
-        Get the current patch version by fetching a recent match.
-        """
-        try:
-            platform = self.platform_routing.get(region, "kr")
-            
-            # Get a recent pro match (Faker's most recent game)
-            summoner = self.lol_watcher.summoner.by_name(platform, "Hide on bush")
-            match_ids = self.lol_watcher.match.matchlist_by_puuid(
-                platform, 
-                summoner['puuid'], 
-                queue=420,  # Ranked Solo
-                count=1
-            )
-            
-            if match_ids:
-                match_data = self.lol_watcher.match.by_id(platform, match_ids[0])
-                full_version = match_data['info']['gameVersion']
-                # Extract major.minor patch (e.g., "16.10" from "16.10.123.456")
-                patch = ".".join(full_version.split('.')[:2])
-                return patch
-            
-            return "Unknown"
-        except Exception as e:
-            print(f"⚠️ Could not fetch current patch: {e}")
-            return "Unknown"
