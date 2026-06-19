@@ -1,27 +1,156 @@
 {
-    "KR": [{"IGN": "TOPKING", "tagline": "asd", "player": "DK Siwoo"}, 
-    {"IGN": "대머리도적", "tagline": "롤링썬더", "player": "KRX Rich"},
-{"IGN": "Casting", "tagline": "KR11", "player": "BRO Casting"},
-{"IGN": "Zeus", "tagline": "glgl", "player": "HLE Zeus"},
-{"IGN": "songman", "tagline": "KR11", "player": "BFX Clear"},
-{"IGN": "어리고싶다", "tagline": "KR1", "player": "T1 Doran"},
-{"IGN": "작두콩차", "tagline": "꿀유자차", "player": "KT PerfecT"},
-{"IGN": "kingen", "tagline": "KR1", "player": "NS Kingen"},
-{"IGN": "kiin", "tagline": "KR1", "player": "GEN Kiin"},
-{"IGN": "따봉 람머스", "tagline": "KR1", "player": "DNS DuDu"}],
-    "CN": [{"IGN": "aierlanlaozhu", "tagline": "KR1", "player": "AL Flandre"},
-{"IGN": "빈 스토리", "tagline": "KR1", "player": "BLG Bin"},
-{"IGN": "zdz", "tagline": "2001", "player": "EDG Zdz"},
-{"IGN": "vanana", "tagline": "0110", "player": "iG Soboro"},
-{"IGN": "吸血鬼大王", "tagline": "世一鬼", "player": "JDG Xiaoxu"},
-{"IGN": "샤오 쑤A", "tagline": "KR1", "player": "JDG Xiaoxu"},
-{"IGN": "venus", "tagline": "zypp" , "player": "UP sasi"},
-{"IGN": "시비걸면지상렬", "tagline": "KR1" , "player": "LNG sheer"},
-{"IGN": "어쩌라고맞짱뜰까", "tagline": "KR1", "player": "NIP HOYA"},
-{"IGN": "헤리z", "tagline": "6666", "player": "OMG Hery"},
-{"IGN": "wechoukesi", "tagline": "KR1", "player": "WE Cube"},
-{"IGN": "godknows", "tagline": "lqh", "player": "TT Keshi"},
-{"IGN": "qsxmiocmio", "tagline": "KR1", "player": "TES 369"},
-{"IGN": "liangchen", "tagline": "0611", "player": "UP Liangchen"},
-{"IGN": "eqweqwdsad", "tagline": "123", "player": "WBG Zika"}]
+    "KR": [
+        {
+            "IGN": "TOPKING",
+            "tagline": "asd",
+            "player": "DK Siwoo",
+            "puuid": "pOD1kkxjZWwJoz09LL_1yMSOf1bGANu2ULZZ264XmsEvL2wFeR-_Ii0NaJap8qpecx4-hKNlQetX0A"
+        },
+        {
+            "IGN": "대머리도적",
+            "tagline": "롤링썬더",
+            "player": "KRX Rich",
+            "puuid": "QpR71FYSsM5952QcuZQGe3pT0ejjfBq6ybotqsjs6qjt95PC8YmToo1EkXCWWCa1MAiuZeWDRRsHTA"
+        },
+        {
+            "IGN": "Casting",
+            "tagline": "KR11",
+            "player": "BRO Casting",
+            "puuid": "xityMl696o2m4cG3TuE32eTGqVyYV4rM2tv97NAvgi73nWwjigSvodqkOWUtpIuu-QedigKqQAC6fA"
+        },
+        {
+            "IGN": "Zeus",
+            "tagline": "glgl",
+            "player": "HLE Zeus",
+            "puuid": "A06XMUXSslR3_7of3PGW5Tb2KWkmDeY44LgI3M7-9f5ck3MAEJ_ITI7JcrufOZBu6mcJsyxjxMTkHg"
+        },
+        {
+            "IGN": "songman",
+            "tagline": "KR11",
+            "player": "BFX Clear",
+            "puuid": "5BQgiWtSQkyzt9G6ylrW_cXf7WQ7QbBSdHPYeLiEnekJY0YsFfKPkoGASvX607tS1_vPX5kR_rZl7Q"
+        },
+        {
+            "IGN": "어리고싶다",
+            "tagline": "KR1",
+            "player": "T1 Doran",
+            "puuid": "0wOwbK5yG6_8mLAuS2R4oQHvpyPUJOR9I9cTkhScd8KiNnY8Y5McK7ZGghCpqs_LisDa93JEhAjfJA"
+        },
+        {
+            "IGN": "작두콩차",
+            "tagline": "꿀유자차",
+            "player": "KT PerfecT",
+            "puuid": "QinCf87HDzDqOPUUH_Ke8phm6eQ1ix8QCiQ7V_UezD092vWQIRbFkaGO7g_tdZwx83970p_Or3k8bQ"
+        },
+        {
+            "IGN": "kingen",
+            "tagline": "KR1",
+            "player": "NS Kingen",
+            "puuid": "Vfg1GTKbhZ2T_P77JpuukgWGSYYUZy1w3kajtsXOve7Uv7NEtHjGrSBcup3019gatyhwhtv1Y74f_w"
+        },
+        {
+            "IGN": "kiin",
+            "tagline": "KR1",
+            "player": "GEN Kiin",
+            "puuid": "JFamk8o-q2V9aqEBSGaxVKfjYMLa5q-lZE1DIvAJzFMeOMi6oip4G5dJOJ_ytcu6X8wFMFBuJjtVjw"
+        },
+        {
+            "IGN": "따봉 람머스",
+            "tagline": "KR1",
+            "player": "DNS DuDu",
+            "puuid": "4ngnaXhhpvr0YC8qKwkhZzN3Gfeu14fOSejD5wwILtmJBadKVRzvyD-kcNnMMB0nmQmdMsb0wFlnmg"
+        }
+    ],
+    "CN": [
+        {
+            "IGN": "aierlanlaozhu",
+            "tagline": "KR1",
+            "player": "AL Flandre",
+            "puuid": "NsI1DFe5l9mmlQvrox4OYh5P9jpAysADYl8sK2BthwU-1092qwHdmlQE5IzF2fjht5fSwSuuLVewLg"
+        },
+        {
+            "IGN": "빈 스토리",
+            "tagline": "KR1",
+            "player": "BLG Bin",
+            "puuid": "LIPTK3C5YV10OtMz-7NwJKU5QBH_RzJeHJZfotc4ofwznh7AI6CIWzCDUyhy8Bs7SuaOo6ufZNLeMw"
+        },
+        {
+            "IGN": "zdz",
+            "tagline": "2001",
+            "player": "EDG Zdz",
+            "puuid": "qrOdOTAiC2wPQrMmlfgIcTMtFIG-qrAiM4_XZnh_ddnRIQFGl8Zz4BmUsOXCn2wmMwR4Xm20BSJQyg"
+        },
+        {
+            "IGN": "vanana",
+            "tagline": "0110",
+            "player": "iG Soboro",
+            "puuid": "K4yo2sLRrdQfIZJm--pl52Wngoi_6sNvTkrzhnmAW4ubJgzJasRatl3UjxXUQdb3IHNmPk5wi9-IDQ"
+        },
+        {
+            "IGN": "吸血鬼大王",
+            "tagline": "世一鬼",
+            "player": "JDG Xiaoxu",
+            "puuid": "CTYzIEgAKSOTW5maaav_E1USUwWJpCGBYCVfPtkl12Ro_6V-_CJwunMBdcoNix7BipHZDZjTbGvdbw"
+        },
+        {
+            "IGN": "샤오 쑤A",
+            "tagline": "KR1",
+            "player": "JDG Xiaoxu",
+            "puuid": "6GzFGf0gQ_JgC2CH82kU0CWSpnK9aBuTmk8GYaqDpxm8i3DEyBlhnh66ZV6VN7YkTyPc3jpJHXiUTA"
+        },
+        {
+            "IGN": "venus",
+            "tagline": "zypp",
+            "player": "UP sasi",
+            "puuid": "AaDaPn1Jo7ULmF3QpaHIsW6BhVOZmMmWoMXRfNcyP1hpmzEcuweCFKtcpsGlyhxc99xpOZMjbMOdkQ"
+        },
+        {
+            "IGN": "시비걸면지상렬",
+            "tagline": "KR1",
+            "player": "LNG sheer",
+            "puuid": "3i7OmwMJgG81o3K4R0ZBRXK8KMF8Py_aJibLFaspPjeSGwZvjWn-NrD_me08PIgV42XFze0AyvaO9w"
+        },
+        {
+            "IGN": "어쩌라고맞짱뜰까",
+            "tagline": "HOYA",
+            "player": "NIP HOYA",
+            "puuid": "wRKjCCjVztzrUv5dZxw3iL75yJciwWuKcOuayBbGfbRuDgVAeCaVFK3ztcNq0z-dT9e9vZy4QF0Ijg"
+        },
+        {
+            "IGN": "헤리z",
+            "tagline": "6666",
+            "player": "OMG Hery",
+            "puuid": "2Q1Jos7zx4j9wuFZUDlmIUKilK_dr3nHUU7ebkpe9jZ07lS_kvc4cgXWuL-wU1rT9aZFn2ZUR3Nf4w"
+        },
+        {
+            "IGN": "wechoukesi",
+            "tagline": "KR1",
+            "player": "WE Cube",
+            "puuid": "lIBnXjeqUKdGcr2K8loxiKbcFYs6wvwllGw-hty0AerK-43oKbJtEBJBVXb1HlkUBD0t1h6rxOHFWg"
+        },
+        {
+            "IGN": "godknows",
+            "tagline": "lqh",
+            "player": "TT Keshi",
+            "puuid": "5_n8t6nfCQ8La5qTI9jL8qcygpYcvWsy8C9K6_AylSjW6WJ9O1yalZ66fhdtI1RoTOFKvNbGKcOmgA"
+        },
+        {
+            "IGN": "qsxmiocmio",
+            "tagline": "KR1",
+            "player": "TES 369",
+            "puuid": "6mXcURQjq8l2k-MHoLzo5SMzomupREkbjjsPTpUv8GRo4lAJxr8pBjjmV_kgnozkApFlVzL6NTsmow"
+        },
+        {
+            "IGN": "liangchen",
+            "tagline": "0611",
+            "player": "UP Liangchen",
+            "puuid": "BNAqp751IcCvmlzsKOMtWgHJ783zVlL-hfcEjXrdMg2MxgYaxb_YEM2WtoAx5KtMsmSO2P072m-cQw"
+        },
+        {
+            "IGN": "eqweqwdsad",
+            "tagline": "123",
+            "player": "WBG Zika",
+            "puuid": "2Xm9csWiBEXW5WUIxYm-XPjHXyMNyRszI3z1uNi6yiMSNISu_Kd3AnxByMkK5_CtthLgDZScHtiLbA"
+        }
+    ]
 }
