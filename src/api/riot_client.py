@@ -1,4 +1,4 @@
-# src/api/riot_client.py
+
 from typing import Optional
 from riotwatcher import LolWatcher, RiotWatcher, ApiError
 from src.models import Player, Match
@@ -32,8 +32,6 @@ class RiotAPIClient:
             "NA": "americas",
             "EUW": "europe",
         }
-        
-        print("✅ Riot API client initialized (Riot-Watcher)")
 
     def get_summoner(self, game_name: str, tag_line: str, region: str) -> Optional[Player]:
         """
@@ -45,7 +43,7 @@ class RiotAPIClient:
         try:
             # Validate region
             if region not in self.regional_routing:
-                print(f"⚠️ Unsupported region: {region}. Using KR as fallback.")
+                print(f"Unsupported region: {region}. Using KR as fallback.")
                 region = "KR"
             
             # Step 1: Get account info (contains puuid and gameName)
@@ -67,17 +65,17 @@ class RiotAPIClient:
                 team=None,
                 role=None
             )
-            print(f"✅ Found summoner: {account_name} (Level {summoner['summonerLevel']}) on {region}")
+            print(f"Found summoner: {account_name} on {region}")
             return player
             
         except ApiError as err:
             if err.response.status_code == 404:
-                print(f"⚠️ Summoner not found: {game_name}#{tag_line} on {region}")
+                print(f"Summoner not found: {game_name}#{tag_line} on {region}")
             else:
-                print(f"❌ API error: {err}")
+                print(f"API error: {err}")
             return None
         except Exception as e:
-            print(f"❌ Error fetching summoner {game_name}#{tag_line} on {region}: {e}")
+            print(f"Error fetching summoner {game_name}#{tag_line} on {region}: {e}")
             return None
 
     def get_recent_matches(self, puuid: str, region: str, count: int = 20) -> list[Match]:
@@ -87,7 +85,7 @@ class RiotAPIClient:
         try:
             # Validate region
             if region not in self.platform_routing:
-                print(f"⚠️ Unsupported region: {region}. Using KR as fallback.")
+                print(f"Unsupported region: {region}. Using KR as fallback.")
                 region = "KR"
             
             platform = self.platform_routing[region]
@@ -104,7 +102,8 @@ class RiotAPIClient:
             for match_id in match_ids:
                 # Get match details
                 match_data = self.lol_watcher.match.by_id(platform, match_id)
-                
+                print(platform)
+                print(match_id)
                 # Find participant for this player
                 participant = None
                 for p in match_data['info']['participants']:
@@ -119,7 +118,7 @@ class RiotAPIClient:
                     match_id=match_id,
                     puuid=puuid,
                     champion=participant['championName'],
-                    role=self._determine_role_from_participant(participant),
+                    role=participant['role'],
                     win=participant['win'],
                     kills=participant['kills'],
                     deaths=participant['deaths'],
@@ -136,14 +135,14 @@ class RiotAPIClient:
                 )
                 matches.append(match_obj)
             
-            print(f"✅ Retrieved {len(matches)} matches for {region}")
+            print(f"Retrieved {len(matches)} matches for {region}")
             return matches
             
         except ApiError as err:
-            print(f"❌ API error fetching matches: {err}")
+            print(f"API error fetching matches: {err}")
             return []
         except Exception as e:
-            print(f"❌ Error fetching matches: {e}")
+            print(f"Error fetching matches: {e}")
             return []
 
     def get_player_with_matches(
@@ -162,28 +161,7 @@ class RiotAPIClient:
         
         return None, []
 
-    def test_connection(self, test_region: str = "KR") -> bool:
-        """Test if the API key works by fetching a known summoner."""
-        try:
-            if test_region not in self.regional_routing:
-                test_region = "KR"
-            
-            regional = self.regional_routing[test_region]
-            account = self.riot_watcher.account.by_riot_id(regional, "Hide on bush", "KR1")
-            if account:
-                print(f"✅ API connection successful!")
-                return True
-            return False
-        except ApiError as err:
-            print(f"❌ API connection failed: {err}")
-            return False
-        except Exception as e:
-            print(f"❌ API connection failed: {e}")
-            return False
 
-    # ============================================
-    # Helper methods
-    # ============================================
 
     def _determine_role_from_participant(self, participant: dict) -> str:
         """Determine role from participant data."""
@@ -213,8 +191,17 @@ class RiotAPIClient:
         return items
 
     def _get_runes_from_participant(self, participant: dict) -> list[int]:
-        """Extract rune IDs from participant data."""
+        """
+        Extract all rune IDs from participant data, including minor stat shards.
+        
+        Returns a list of all rune IDs in order:
+        - Primary path runes (keystone + other primary runes)
+        - Secondary path runes
+        - Minor stat shards (offense, flex, defense)
+        """
         runes = []
+        
+        # 1. Get primary and secondary runes from styles
         perks = participant.get('perks', {})
         styles = perks.get('styles', [])
         
@@ -224,5 +211,21 @@ class RiotAPIClient:
                 rune_id = selection.get('perk', 0)
                 if rune_id:
                     runes.append(rune_id)
+        
+        # 2. Get minor stat shards from statPerks
+        stat_perks = perks.get('statPerks', {})
+        
+        # Stat shard IDs (these are the minor runes)
+        # The keys are: offense, flex, defense
+        stat_rune_ids = [
+            stat_perks.get('offense', 0),   # Attack Speed, Adaptive Force, etc.
+            stat_perks.get('flex', 0),      # Adaptive Force, Armor, Magic Resist, etc.
+            stat_perks.get('defense', 0),   # Armor, Magic Resist, Health, etc.
+        ]
+        
+        # Add non-zero stat runes
+        for stat_id in stat_rune_ids:
+            if stat_id and stat_id != 0:
+                runes.append(stat_id)
         
         return runes

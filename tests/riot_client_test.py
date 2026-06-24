@@ -38,13 +38,13 @@ class TestRiotAPIClient:
         print("\n🔍 Testing Faker account access...")
         
         # Fetch Faker
-        player = client.get_summoner("Hide on bush", "KR1", "KR")
+        player = client.get_summoner("TOPKING", "asd", "KR")
         
         # Verify account data
         assert player is not None, "Failed to fetch Faker's account"
         assert player.puuid is not None, "PUUID not found"
         assert len(player.puuid) > 10, "PUUID seems invalid"
-        assert player.game_name == "Hide on bush", "Game name mismatch"
+        assert player.game_name == "TOPKING", "Game name mismatch"
         assert player.region == "KR", "Region mismatch"
         
         print(f"✅ Account found: {player.game_name}")
