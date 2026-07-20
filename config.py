@@ -15,5 +15,8 @@ RATE_LIMIT_SECONDS = 1
 DEFAULT_REGION = "KR"
 REGIONS = ["KR", "EUW", "NA"]
 
+# data collection
+DEFAULT_MATCH_COUNT = 20
+
 # database
 DATABASE_PATH = "league_data.db"

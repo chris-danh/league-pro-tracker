@@ -1,18 +1,22 @@
 from .schemas import (
     Player,
     Match,
+    Matchup,
+    ItemPurchase,
     ChampionStats,
     PlayerSummary,
     SortBy,
+    ItemPurchase,
 )
 
 
 __all__ = [
     "Player",
-    "Match", 
+    "Match",
+    "Matchup",
+    "ItemPurchase"
     "ChampionStats",
     "PlayerSummary",
     "SortBy",
-    "SUMMONER_SPELLS",
-    "get_spell_name"
+    "ItemPurchase",
 ]

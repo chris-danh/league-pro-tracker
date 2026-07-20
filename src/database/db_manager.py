@@ -1,16 +1,15 @@
+# src/database/db_manager.py
 import sqlite3
-from typing import Optional
-from src.models import Player, Match, ChampionStats, PlayerSummary
+import json
+from typing import Optional, List
+from src.models import Player, Match, Matchup, ChampionStats, PlayerSummary, ItemPurchase
+
 
 class DatabaseManager:
 
     def __init__(self, db_path: str = "league_data.db"):
-
         self.conn = sqlite3.connect(db_path)
-
-        # to access columns by name
         self.conn.row_factory = sqlite3.Row
-
         self.cursor = self.conn.cursor()
         self._create_tables()
 
@@ -28,12 +27,12 @@ class DatabaseManager:
             )
         ''')
         
-        # Matches table
+        # Matches table - UPDATED with new columns
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS matches (
                 match_id TEXT PRIMARY KEY,
                 puuid TEXT NOT NULL,
-                champion TEXT NOT NULL,
+                champion_id INTEGER NOT NULL,
                 role TEXT NOT NULL,
                 win INTEGER NOT NULL,
                 kills INTEGER NOT NULL,
@@ -46,11 +45,16 @@ class DatabaseManager:
                 gold_earned INTEGER NOT NULL,
                 summoner_spell_d INTEGER NOT NULL,
                 summoner_spell_f INTEGER NOT NULL,
+                patch TEXT,
+                game_creation INTEGER,
+                skill_order TEXT,
+                skill_order_levels TEXT,
+                item_purchases TEXT,
                 FOREIGN KEY (puuid) REFERENCES players(puuid)
             )
         ''')
         
-        # Items table (one match can have multiple items)
+        # Items table
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS match_items (
                 match_id TEXT NOT NULL,
@@ -61,7 +65,7 @@ class DatabaseManager:
             )
         ''')
         
-        # Runes table (one match can have multiple runes)
+        # Runes table
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS match_runes (
                 match_id TEXT NOT NULL,
@@ -72,12 +76,31 @@ class DatabaseManager:
             )
         ''')
         
-        # Create indexes for faster queries
+        # Matchups table - NEW
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS matchups (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                match_id TEXT NOT NULL,
+                ally_champion_id INTEGER NOT NULL,
+                enemy_champion_id INTEGER NOT NULL,
+                role TEXT NOT NULL,
+                win INTEGER NOT NULL,
+                patch TEXT,
+                FOREIGN KEY (match_id) REFERENCES matches(match_id)
+            )
+        ''')
+        
+        # Create indexes
         self.cursor.execute('CREATE INDEX IF NOT EXISTS idx_matches_puuid ON matches(puuid)')
-        self.cursor.execute('CREATE INDEX IF NOT EXISTS idx_matches_champion ON matches(champion)')
+        self.cursor.execute('CREATE INDEX IF NOT EXISTS idx_matches_champion_id ON matches(champion_id)')
+        self.cursor.execute('CREATE INDEX IF NOT EXISTS idx_matches_patch ON matches(patch)')
+        self.cursor.execute('CREATE INDEX IF NOT EXISTS idx_matchups_ally ON matchups(ally_champion_id)')
+        self.cursor.execute('CREATE INDEX IF NOT EXISTS idx_matchups_enemy ON matchups(enemy_champion_id)')
+        self.cursor.execute('CREATE INDEX IF NOT EXISTS idx_matchups_patch ON matchups(patch)')
         
         self.conn.commit()
-    
+        print("✅ Database tables created successfully")
+
     def save_player(self, player: Player) -> bool:
         try:
             self.cursor.execute('''
@@ -89,23 +112,38 @@ class DatabaseManager:
             self.conn.commit()
             return True
         except Exception as e:
+            print(f"Error saving player: {e}")
             return False
-    
+
     def save_match(self, match: Match) -> bool:
         try:
+            # Convert lists to JSON strings
+            skill_order_levels_json = json.dumps(match.skill_order_levels) if match.skill_order_levels else None
+            
+            item_purchases_json = None
+            if match.item_purchases:
+                item_purchases_json = json.dumps([
+                    {"item_id": p.item_id, "timestamp": p.timestamp}
+                    for p in match.item_purchases
+                ])
+            
             self.cursor.execute('''
                 INSERT OR REPLACE INTO matches 
-                (match_id, puuid, champion, role, win, kills, deaths, 
-                 assists, cs, game_duration, total_damage, vision_score, gold_earned)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (match.match_id, match.puuid, match.champion, match.role,
+                (match_id, puuid, champion_id, role, win, kills, deaths, 
+                 assists, cs, game_duration, total_damage, vision_score, 
+                 gold_earned, summoner_spell_d, summoner_spell_f,
+                 patch, game_creation, skill_order, skill_order_levels, item_purchases)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (match.match_id, match.puuid, match.champion_id, match.role,
                   int(match.win), match.kills, match.deaths, match.assists,
                   match.cs, match.game_duration, match.total_damage,
-                  match.vision_score, match.gold_earned, match.summoner_spell_d, match.summoner_spell_f))
+                  match.vision_score, match.gold_earned,
+                  match.summoner_spell_d, match.summoner_spell_f,
+                  match.patch, match.game_creation,
+                  match.skill_order, skill_order_levels_json, item_purchases_json))
             
             # Save items if present
             if match.items:
-                # Delete old items first (for REPLACE scenario)
                 self.cursor.execute('DELETE FROM match_items WHERE match_id = ? AND puuid = ?', 
                                    (match.match_id, match.puuid))
                 for slot, item_id in enumerate(match.items):
@@ -116,7 +154,6 @@ class DatabaseManager:
             
             # Save runes if present
             if match.runes:
-                # Delete old runes first (for REPLACE scenario)
                 self.cursor.execute('DELETE FROM match_runes WHERE match_id = ? AND puuid = ?',
                                    (match.match_id, match.puuid))
                 for slot, rune_id in enumerate(match.runes):
@@ -128,10 +165,31 @@ class DatabaseManager:
             self.conn.commit()
             return True
         except Exception as e:
+            print(f"Error saving match: {e}")
             return False
-    
+
+    def save_matchup(self, matchup: Matchup) -> bool:
+        """Save a champion matchup to the database."""
+        try:
+            self.cursor.execute('''
+                INSERT OR IGNORE INTO matchups 
+                (match_id, ally_champion_id, enemy_champion_id, role, win, patch)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (
+                matchup.match_id,
+                matchup.ally_champion_id,
+                matchup.enemy_champion_id,
+                matchup.role,
+                int(matchup.win),
+                matchup.patch
+            ))
+            self.conn.commit()
+            return True
+        except Exception as e:
+            print(f"Error saving matchup: {e}")
+            return False
+
     def get_player(self, puuid: str) -> Optional[Player]:
-        """Get player by PUUID"""
         self.cursor.execute('''
             SELECT puuid, game_name, tag_line, region, team, role
             FROM players WHERE puuid = ?
@@ -148,13 +206,12 @@ class DatabaseManager:
                 role=row["role"]
             )
         return None
-    
+
     def get_player_matches(self, puuid: str, limit: int = 50) -> list[Match]:
-        """Get recent matches for a player"""
         query = """
             SELECT * FROM matches 
             WHERE puuid = ? 
-            ORDER BY rowid DESC 
+            ORDER BY game_creation DESC, rowid DESC
             LIMIT ?
         """
         
@@ -163,7 +220,7 @@ class DatabaseManager:
         
         matches = []
         for row in rows:
-            # Get items for this match
+            # Get items
             self.cursor.execute('''
                 SELECT item_id FROM match_items 
                 WHERE match_id = ? AND puuid = ?
@@ -171,7 +228,7 @@ class DatabaseManager:
             ''', (row["match_id"], row["puuid"]))
             items = [r["item_id"] for r in self.cursor.fetchall()]
             
-            # Get runes for this match
+            # Get runes
             self.cursor.execute('''
                 SELECT rune_id FROM match_runes 
                 WHERE match_id = ? AND puuid = ?
@@ -179,10 +236,24 @@ class DatabaseManager:
             ''', (row["match_id"], row["puuid"]))
             runes = [r["rune_id"] for r in self.cursor.fetchall()]
             
+            # Parse JSON fields
+            skill_order_levels = json.loads(row["skill_order_levels"]) if row["skill_order_levels"] else None
+            
+            item_purchases = None
+            if row["item_purchases"]:
+                try:
+                    purchases_data = json.loads(row["item_purchases"])
+                    item_purchases = [
+                        ItemPurchase(item_id=p["item_id"], timestamp=p["timestamp"])
+                        for p in purchases_data
+                    ]
+                except:
+                    item_purchases = None
+            
             match = Match(
                 match_id=row["match_id"],
                 puuid=row["puuid"],
-                champion=row["champion"],
+                champion_id=row["champion_id"],
                 role=row["role"],
                 win=bool(row["win"]),
                 kills=row["kills"],
@@ -194,17 +265,24 @@ class DatabaseManager:
                 vision_score=row["vision_score"],
                 gold_earned=row["gold_earned"],
                 items=items,
-                runes=runes
+                runes=runes,
+                summoner_spell_d=row["summoner_spell_d"],
+                summoner_spell_f=row["summoner_spell_f"],
+                patch=row["patch"],
+                game_creation=row["game_creation"],
+                skill_order=row["skill_order"],
+                skill_order_levels=skill_order_levels,
+                item_purchases=item_purchases
             )
             matches.append(match)
         
         return matches
-    
+
     def get_practice_summary(self, puuid: str) -> PlayerSummary:
         """Get aggregated champion stats for a player (all matches)"""
         self.cursor.execute('''
             SELECT 
-                champion,
+                champion_id,
                 COUNT(*) as games,
                 SUM(win) as wins,
                 SUM(kills) as total_kills,
@@ -212,7 +290,7 @@ class DatabaseManager:
                 SUM(assists) as total_assists
             FROM matches
             WHERE puuid = ?
-            GROUP BY champion
+            GROUP BY champion_id
             ORDER BY games DESC
         ''', (puuid,))
         
@@ -227,7 +305,7 @@ class DatabaseManager:
             losses = games - wins
             
             stats = ChampionStats(
-                champion_name=row["champion"],
+                champion_id=row["champion_id"],
                 games_played=games,
                 wins=wins,
                 losses=losses,
@@ -238,7 +316,6 @@ class DatabaseManager:
             champion_stats.append(stats)
             total_games += games
         
-        # Get player info
         player = self.get_player(puuid)
         if not player:
             raise ValueError(f"Player with puuid {puuid} not found")
@@ -248,14 +325,12 @@ class DatabaseManager:
             champion_stats=champion_stats,
             total_games=total_games
         )
-    
+
     def player_exists(self, puuid: str) -> bool:
-        """Check if a player exists in the database"""
         self.cursor.execute('SELECT 1 FROM players WHERE puuid = ? LIMIT 1', (puuid,))
         return self.cursor.fetchone() is not None
-    
+
     def get_all_players(self) -> list[Player]:
-        """Get all players in the database"""
         self.cursor.execute('SELECT puuid, game_name, tag_line, region, team, role FROM players')
         rows = self.cursor.fetchall()
         
@@ -270,7 +345,6 @@ class DatabaseManager:
             )
             for row in rows
         ]
-    
+
     def close(self):
-        """Close the database connection"""
         self.conn.close()
