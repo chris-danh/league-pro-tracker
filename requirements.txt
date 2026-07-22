@@ -2,3 +2,5 @@ riotwatcher
 python-dotenv
 requests
 pytest
+fastapi
+uvicorn[standard]

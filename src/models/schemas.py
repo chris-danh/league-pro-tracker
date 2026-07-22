@@ -34,7 +34,7 @@ class Matchup:
     role: str
     win: bool
     match_id: str
-    patch: Optional[str] = None
+    patch: str
 
 @dataclass
 class ItemPurchase:
@@ -49,7 +49,7 @@ class Match:
     # general stats
     match_id: str
     puuid: str
-    champion_id: str
+    champion_id: int
     role: str
     win: bool
     kills: int
@@ -60,8 +60,8 @@ class Match:
     total_damage: int
     vision_score: int
     gold_earned: int
-    patch: Optional[str] = None
-    game_creation: Optional[int] = None
+    patch: str
+    game_creation: int
 
     # build and runes
     items: list[int]
@@ -71,11 +71,11 @@ class Match:
 
     
     # skill order
-    skill_order: Optional[str] = None
-    skill_order_levels: Optional[list[int]] = None
+    skill_order: str
+    skill_order_levels: list[int]
 
     # item build order
-    item_purchases: Optional[list[ItemPurchase]] = None
+    item_purchases: list[ItemPurchase]
 
 
 

@@ -121,46 +121,32 @@ class DatabaseManager:
             skill_order_levels_json = json.dumps(match.skill_order_levels) if match.skill_order_levels else None
             
             item_purchases_json = None
+           
+            
             if match.item_purchases:
                 item_purchases_json = json.dumps([
                     {"item_id": p.item_id, "timestamp": p.timestamp}
                     for p in match.item_purchases
                 ])
-            
+        
             self.cursor.execute('''
                 INSERT OR REPLACE INTO matches 
                 (match_id, puuid, champion_id, role, win, kills, deaths, 
-                 assists, cs, game_duration, total_damage, vision_score, 
-                 gold_earned, summoner_spell_d, summoner_spell_f,
-                 patch, game_creation, skill_order, skill_order_levels, item_purchases)
+                assists, cs, game_duration, total_damage, vision_score, 
+                gold_earned, summoner_spell_d, summoner_spell_f,
+                patch, game_creation, skill_order, skill_order_levels, item_purchases)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (match.match_id, match.puuid, match.champion_id, match.role,
-                  int(match.win), match.kills, match.deaths, match.assists,
-                  match.cs, match.game_duration, match.total_damage,
-                  match.vision_score, match.gold_earned,
-                  match.summoner_spell_d, match.summoner_spell_f,
-                  match.patch, match.game_creation,
-                  match.skill_order, skill_order_levels_json, item_purchases_json))
+            ''', (
+                match.match_id, match.puuid, match.champion_id, match.role,
+                int(match.win), match.kills, match.deaths, match.assists,
+                match.cs, match.game_duration, match.total_damage,
+                match.vision_score, match.gold_earned,
+                match.summoner_spell_d, match.summoner_spell_f,
+                match.patch, match.game_creation,
+                match.skill_order, skill_order_levels_json, item_purchases_json
+            ))
             
-            # Save items if present
-            if match.items:
-                self.cursor.execute('DELETE FROM match_items WHERE match_id = ? AND puuid = ?', 
-                                   (match.match_id, match.puuid))
-                for slot, item_id in enumerate(match.items):
-                    self.cursor.execute('''
-                        INSERT INTO match_items (match_id, puuid, item_id, item_slot)
-                        VALUES (?, ?, ?, ?)
-                    ''', (match.match_id, match.puuid, item_id, slot))
-            
-            # Save runes if present
-            if match.runes:
-                self.cursor.execute('DELETE FROM match_runes WHERE match_id = ? AND puuid = ?',
-                                   (match.match_id, match.puuid))
-                for slot, rune_id in enumerate(match.runes):
-                    self.cursor.execute('''
-                        INSERT INTO match_runes (match_id, puuid, rune_id, rune_slot)
-                        VALUES (?, ?, ?, ?)
-                    ''', (match.match_id, match.puuid, rune_id, slot))
+           
             
             self.conn.commit()
             return True
