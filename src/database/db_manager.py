@@ -1,6 +1,7 @@
 # src/database/db_manager.py
 import sqlite3
 import json
+from datetime import datetime, timedelta
 from typing import Optional, List
 from src.models import Player, Match, Matchup, ChampionStats, PlayerSummary, ItemPurchase
 
@@ -8,10 +9,20 @@ from src.models import Player, Match, Matchup, ChampionStats, PlayerSummary, Ite
 class DatabaseManager:
 
     def __init__(self, db_path: str = "league_data.db"):
-        self.conn = sqlite3.connect(db_path)
+        self.db_path = db_path
+        self._connect()
+
+    def _connect(self):
+        self.conn = sqlite3.connect(self.db_path)
         self.conn.row_factory = sqlite3.Row
         self.cursor = self.conn.cursor()
         self._create_tables()
+
+    def _ensure_connection(self):
+        try:
+            self.cursor.execute("SELECT 1")
+        except (sqlite3.ProgrammingError, sqlite3.OperationalError, AttributeError):
+            self._connect()
 
     def _create_tables(self):
         """Create all necessary tables if they don't exist"""
@@ -27,7 +38,7 @@ class DatabaseManager:
             )
         ''')
         
-        # Matches table - UPDATED with new columns
+        # Matches table - with game_creation included
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS matches (
                 match_id TEXT PRIMARY KEY,
@@ -76,7 +87,7 @@ class DatabaseManager:
             )
         ''')
         
-        # Matchups table - NEW
+        # Matchups table
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS matchups (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -94,15 +105,16 @@ class DatabaseManager:
         self.cursor.execute('CREATE INDEX IF NOT EXISTS idx_matches_puuid ON matches(puuid)')
         self.cursor.execute('CREATE INDEX IF NOT EXISTS idx_matches_champion_id ON matches(champion_id)')
         self.cursor.execute('CREATE INDEX IF NOT EXISTS idx_matches_patch ON matches(patch)')
+        self.cursor.execute('CREATE INDEX IF NOT EXISTS idx_matches_game_creation ON matches(game_creation)')
         self.cursor.execute('CREATE INDEX IF NOT EXISTS idx_matchups_ally ON matchups(ally_champion_id)')
         self.cursor.execute('CREATE INDEX IF NOT EXISTS idx_matchups_enemy ON matchups(enemy_champion_id)')
-        self.cursor.execute('CREATE INDEX IF NOT EXISTS idx_matchups_patch ON matchups(patch)')
         
         self.conn.commit()
         print("✅ Database tables created successfully")
 
     def save_player(self, player: Player) -> bool:
         try:
+            self._ensure_connection()
             self.cursor.execute('''
                 INSERT OR REPLACE INTO players 
                 (puuid, game_name, tag_line, region, team, role)
@@ -117,24 +129,24 @@ class DatabaseManager:
 
     def save_match(self, match: Match) -> bool:
         try:
+            self._ensure_connection()
+            
             # Convert lists to JSON strings
             skill_order_levels_json = json.dumps(match.skill_order_levels) if match.skill_order_levels else None
             
             item_purchases_json = None
-           
-            
             if match.item_purchases:
                 item_purchases_json = json.dumps([
                     {"item_id": p.item_id, "timestamp": p.timestamp}
                     for p in match.item_purchases
                 ])
-        
+            
             self.cursor.execute('''
                 INSERT OR REPLACE INTO matches 
                 (match_id, puuid, champion_id, role, win, kills, deaths, 
-                assists, cs, game_duration, total_damage, vision_score, 
-                gold_earned, summoner_spell_d, summoner_spell_f,
-                patch, game_creation, skill_order, skill_order_levels, item_purchases)
+                 assists, cs, game_duration, total_damage, vision_score, 
+                 gold_earned, summoner_spell_d, summoner_spell_f,
+                 patch, game_creation, skill_order, skill_order_levels, item_purchases)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (
                 match.match_id, match.puuid, match.champion_id, match.role,
@@ -146,7 +158,25 @@ class DatabaseManager:
                 match.skill_order, skill_order_levels_json, item_purchases_json
             ))
             
-           
+            # Save items if present
+            if match.items:
+                self.cursor.execute('DELETE FROM match_items WHERE match_id = ? AND puuid = ?', 
+                                   (match.match_id, match.puuid))
+                for slot, item_id in enumerate(match.items):
+                    self.cursor.execute('''
+                        INSERT INTO match_items (match_id, puuid, item_id, item_slot)
+                        VALUES (?, ?, ?, ?)
+                    ''', (match.match_id, match.puuid, item_id, slot))
+            
+            # Save runes if present
+            if match.runes:
+                self.cursor.execute('DELETE FROM match_runes WHERE match_id = ? AND puuid = ?',
+                                   (match.match_id, match.puuid))
+                for slot, rune_id in enumerate(match.runes):
+                    self.cursor.execute('''
+                        INSERT INTO match_runes (match_id, puuid, rune_id, rune_slot)
+                        VALUES (?, ?, ?, ?)
+                    ''', (match.match_id, match.puuid, rune_id, slot))
             
             self.conn.commit()
             return True
@@ -155,8 +185,8 @@ class DatabaseManager:
             return False
 
     def save_matchup(self, matchup: Matchup) -> bool:
-        """Save a champion matchup to the database."""
         try:
+            self._ensure_connection()
             self.cursor.execute('''
                 INSERT OR IGNORE INTO matchups 
                 (match_id, ally_champion_id, enemy_champion_id, role, win, patch)
@@ -176,6 +206,7 @@ class DatabaseManager:
             return False
 
     def get_player(self, puuid: str) -> Optional[Player]:
+        self._ensure_connection()
         self.cursor.execute('''
             SELECT puuid, game_name, tag_line, region, team, role
             FROM players WHERE puuid = ?
@@ -193,17 +224,40 @@ class DatabaseManager:
             )
         return None
 
-    def get_player_matches(self, puuid: str, limit: int = 50) -> list[Match]:
+    def get_player_matches(self, puuid: str, limit: int = 50, offset: int = 0) -> list[Match]:
+        """Get recent matches for a player with pagination"""
+        self._ensure_connection()
+        
         query = """
             SELECT * FROM matches 
             WHERE puuid = ? 
             ORDER BY game_creation DESC, rowid DESC
+            LIMIT ? OFFSET ?
+        """
+        
+        self.cursor.execute(query, (puuid, limit, offset))
+        rows = self.cursor.fetchall()
+        
+        return self._rows_to_matches(rows)
+
+    def get_player_recent_matches(self, puuid: str, limit: int = 20) -> list[Match]:
+        """Get recent matches for a player (without role filter)"""
+        self._ensure_connection()
+        
+        query = """
+            SELECT * FROM matches 
+            WHERE puuid = ? 
+            ORDER BY game_creation DESC
             LIMIT ?
         """
         
         self.cursor.execute(query, (puuid, limit))
         rows = self.cursor.fetchall()
         
+        return self._rows_to_matches(rows)
+
+    def _rows_to_matches(self, rows) -> list[Match]:
+        """Convert database rows to Match objects"""
         matches = []
         for row in rows:
             # Get items
@@ -266,6 +320,8 @@ class DatabaseManager:
 
     def get_practice_summary(self, puuid: str) -> PlayerSummary:
         """Get aggregated champion stats for a player (all matches)"""
+        self._ensure_connection()
+        
         self.cursor.execute('''
             SELECT 
                 champion_id,
@@ -313,10 +369,18 @@ class DatabaseManager:
         )
 
     def player_exists(self, puuid: str) -> bool:
+        self._ensure_connection()
         self.cursor.execute('SELECT 1 FROM players WHERE puuid = ? LIMIT 1', (puuid,))
         return self.cursor.fetchone() is not None
 
+    def match_exists(self, match_id: str) -> bool:
+        """Check if a match already exists in the database."""
+        self._ensure_connection()
+        self.cursor.execute("SELECT 1 FROM matches WHERE match_id = ? LIMIT 1", (match_id,))
+        return self.cursor.fetchone() is not None
+
     def get_all_players(self) -> list[Player]:
+        self._ensure_connection()
         self.cursor.execute('SELECT puuid, game_name, tag_line, region, team, role FROM players')
         rows = self.cursor.fetchall()
         
@@ -332,5 +396,101 @@ class DatabaseManager:
             for row in rows
         ]
 
+    def get_last_refresh_time(self, puuid: str) -> Optional[datetime]:
+        """Get the last time a player's data was refreshed."""
+        self._ensure_connection()
+        self.cursor.execute(
+            "SELECT MAX(game_creation) as last_refresh FROM matches WHERE puuid = ?",
+            (puuid,)
+        )
+        row = self.cursor.fetchone()
+        if row and row["last_refresh"]:
+            return datetime.fromtimestamp(row["last_refresh"] / 1000)
+        return None
+
+    def delete_old_matches(self, days_to_keep: int = 31):
+        """
+        Delete matches older than the specified number of days.
+        
+        Args:
+            days_to_keep: Number of days of data to keep (default 31)
+        """
+        self._ensure_connection()
+        
+        cutoff_timestamp = int((datetime.now() - timedelta(days=days_to_keep)).timestamp() * 1000)
+        
+        # Get match IDs to delete
+        self.cursor.execute(
+            "SELECT match_id FROM matches WHERE game_creation < ?",
+            (cutoff_timestamp,)
+        )
+        match_ids = [row["match_id"] for row in self.cursor.fetchall()]
+        
+        if not match_ids:
+            print(f"✅ No matches older than {days_to_keep} days to delete")
+            return
+        
+        # Delete from matchups first (foreign key)
+        placeholders = ','.join('?' * len(match_ids))
+        self.cursor.execute(
+            f"DELETE FROM matchups WHERE match_id IN ({placeholders})",
+            match_ids
+        )
+        
+        # Delete from match_items
+        self.cursor.execute(
+            f"DELETE FROM match_items WHERE match_id IN ({placeholders})",
+            match_ids
+        )
+        
+        # Delete from match_runes
+        self.cursor.execute(
+            f"DELETE FROM match_runes WHERE match_id IN ({placeholders})",
+            match_ids
+        )
+        
+        # Delete from matches
+        self.cursor.execute(
+            f"DELETE FROM matches WHERE match_id IN ({placeholders})",
+            match_ids
+        )
+        
+        self.conn.commit()
+        print(f"🗑️ Deleted {len(match_ids)} matches older than {days_to_keep} days")
+
+    def save_matches_batch(self, matches: list[Match], matchups: list[Matchup]) -> tuple[int, int]:
+        """
+        Save multiple matches and matchups, skipping duplicates.
+        
+        Returns:
+            tuple: (saved_matches_count, saved_matchups_count)
+        """
+        self._ensure_connection()
+        
+        saved_matches = 0
+        saved_matchups = 0
+        
+        for match in matches:
+            if not self.match_exists(match.match_id):
+                if self.save_match(match):
+                    saved_matches += 1
+        
+        for matchup in matchups:
+            # Check if this matchup already exists (by match_id)
+            self.cursor.execute(
+                "SELECT 1 FROM matchups WHERE match_id = ? LIMIT 1",
+                (matchup.match_id,)
+            )
+            if not self.cursor.fetchone():
+                if self.save_matchup(matchup):
+                    saved_matchups += 1
+        
+        self.conn.commit()
+        return saved_matches, saved_matchups
+
     def close(self):
-        self.conn.close()
+        """Close the database connection."""
+        try:
+            self.conn.close()
+        except:
+            pass

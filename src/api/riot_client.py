@@ -1,5 +1,6 @@
 # src/api/riot_client.py
 from typing import Optional, Tuple
+from datetime import datetime, timedelta
 from riotwatcher import LolWatcher, RiotWatcher, ApiError
 from src.models import Player, Match, Matchup, ItemPurchase
 import config
@@ -33,7 +34,26 @@ class RiotAPIClient:
             "EUW": "europe",
         }
 
-    def get_recent_matches(self, puuid: str, region: str, count: int = 20, include_timeline: bool = False) -> Tuple[list[Match], list[Matchup]]:
+    
+    def get_summoner(self, game_name: str, tag_line: str, region: str) -> Optional[Player]:
+        """Helper to fetch a summoner by name/tag (for debugging)."""
+        try:
+            regional = self.regional_routing.get(region, "asia")
+            account = self.riot_watcher.account.by_riot_id(regional, game_name, tag_line)
+            
+            return Player(
+                puuid=account['puuid'],
+                game_name=account['gameName'],
+                tag_line=tag_line,
+                region=region,
+                team=None,
+                role=None
+            )
+        except Exception as e:
+            print(f"Error fetching summoner: {e}")
+            return None
+    
+    def get_recent_matches(self, puuid: str, region: str, count: int = 20, include_timeline: bool = True) -> Tuple[list[Match], list[Matchup]]:
         """
         Get recent matches for a summoner using PUUID.
         
@@ -85,7 +105,7 @@ class RiotAPIClient:
                 # Find enemy laner (same role, opposite team)
                 enemy_participant = None
                 for p in match_data['info']['participants']:
-                    if p['teamId'] != participant['teamId'] and p.get('role') == participant.get('role'):
+                    if p['teamId'] != participant['teamId'] and p.get('teamPosition') == participant.get('teamPosition'):
                         enemy_participant = p
                         break
                 
@@ -123,7 +143,7 @@ class RiotAPIClient:
                     match_id=match_id,
                     puuid=puuid,
                     champion_id=participant['championId'],  # Use ID instead of name
-                    role=participant.get('role', 'UNKNOWN'),
+                    role=participant.get('teamPosition', 'UNKNOWN'),
                     win=participant['win'],
                     kills=participant['kills'],
                     deaths=participant['deaths'],
@@ -150,7 +170,7 @@ class RiotAPIClient:
                     matchup = Matchup(
                         ally_champion_id=participant['championId'],
                         enemy_champion_id=enemy_participant['championId'],
-                        role=participant.get('role', 'UNKNOWN'),
+                        role=participant.get('teamPosition', 'UNKNOWN'),
                         win=participant['win'],
                         match_id=match_id,
                         patch=patch
@@ -167,6 +187,158 @@ class RiotAPIClient:
             print(f"Error fetching matches: {e}")
             return [], []
 
+# src/api/riot_client.py
+
+    def get_matches_since_date(
+        self,
+        puuid: str,
+        region: str,
+        start_date: Optional[datetime] = None,
+        max_count: int = 100
+    ) -> tuple[list[Match], list[Matchup]]:
+        """
+        Get matches for a player since a specific date.
+        If no start_date provided, get last 31 days.
+        
+        Args:
+            puuid: Player's PUUID
+            region: Region (KR, NA, EUW)
+            start_date: Optional datetime to fetch matches from
+            max_count: Maximum number of matches to fetch (default 100)
+        
+        Returns:
+            tuple: (list of Match objects, list of Matchup objects)
+        """
+        if start_date is None:
+            start_date = datetime.now() - timedelta(days=31)
+        
+        start_timestamp = int(start_date.timestamp() * 1000)
+        
+        try:
+            # Validate region
+            if region not in self.platform_routing:
+                print(f"Unsupported region: {region}. Using KR as fallback.")
+                region = "KR"
+            
+            platform = self.platform_routing[region]
+            
+            # Get match IDs (ranked solo)
+            match_ids = self.lol_watcher.match.matchlist_by_puuid(
+                platform,
+                puuid,
+                queue=420,  # Ranked Solo
+                count=min(max_count, 100)  # Riot API max is 100
+            )
+            
+            matches = []
+            matchups = []
+            
+            for match_id in match_ids:
+                # Get match details
+                match_data = self.lol_watcher.match.by_id(platform, match_id)
+                
+                # Check if match is within our date range
+                game_creation = match_data['info']['gameCreation']
+                if game_creation < start_timestamp:
+                    break  # Matches are in descending order, so we can break
+                
+                # Find participant for this player
+                participant = None
+                for p in match_data['info']['participants']:
+                    if p['puuid'] == puuid:
+                        participant = p
+                        break
+
+                if not participant:
+                    continue
+                
+                # Get participant ID (1-indexed)
+                participant_id = match_data['info']['participants'].index(participant) + 1
+                
+                # Find enemy laner (same role, opposite team)
+                enemy_participant = None
+                for p in match_data['info']['participants']:
+                    if p['teamId'] != participant['teamId'] and p.get('teamPosition') == participant.get('teamPosition'):
+                        enemy_participant = p
+                        break
+                
+                # If no exact role match, find any enemy
+                if not enemy_participant:
+                    for p in match_data['info']['participants']:
+                        if p['teamId'] != participant['teamId']:
+                            enemy_participant = p
+                            break
+                
+                # Extract patch info
+                game_version = match_data['info']['gameVersion']
+                patch = ".".join(game_version.split('.')[:2])
+                
+                # Extract skill order and item purchases from timeline
+                skill_order = None
+                skill_order_levels = None
+                item_purchases = None
+                
+                try:
+                    skill_order, skill_order_levels = self._extract_skill_order(
+                        match_id, platform, participant_id
+                    )
+                    
+                    game_duration = match_data['info']['gameDuration']
+                    item_purchases = self._extract_item_purchases(
+                        match_id, platform, participant_id, game_duration
+                    )
+                except Exception as e:
+                    print(f"Warning: Could not extract timeline data for {match_id}: {e}")
+                
+                # Create Match object
+                match_obj = Match(
+                    match_id=match_id,
+                    puuid=puuid,
+                    champion_id=participant['championId'],
+                    role=participant.get('teamPosition', 'UNKNOWN'),
+                    win=participant['win'],
+                    kills=participant['kills'],
+                    deaths=participant['deaths'],
+                    assists=participant['assists'],
+                    cs=participant['totalMinionsKilled'],
+                    game_duration=match_data['info']['gameDuration'],
+                    total_damage=participant['totalDamageDealtToChampions'],
+                    vision_score=participant.get('visionScore', 0),
+                    gold_earned=participant['goldEarned'],
+                    items=self._get_items_from_participant(participant),
+                    runes=self._get_runes_from_participant(participant),
+                    summoner_spell_d=participant['summoner1Id'],
+                    summoner_spell_f=participant['summoner2Id'],
+                    patch=patch,
+                    game_creation=game_creation,
+                    skill_order=skill_order,
+                    skill_order_levels=skill_order_levels,
+                    item_purchases=item_purchases
+                )
+                matches.append(match_obj)
+                
+                # Create Matchup object if enemy found
+                if enemy_participant:
+                    matchup = Matchup(
+                        ally_champion_id=participant['championId'],
+                        enemy_champion_id=enemy_participant['championId'],
+                        role=participant.get('teamPosition', 'UNKNOWN'),
+                        win=participant['win'],
+                        match_id=match_id,
+                        patch=patch
+                    )
+                    matchups.append(matchup)
+            
+            print(f"Retrieved {len(matches)} matches and {len(matchups)} matchups since {start_date.strftime('%Y-%m-%d')}")
+            return matches, matchups
+            
+        except ApiError as err:
+            print(f"API error fetching matches since date: {err}")
+            return [], []
+        except Exception as e:
+            print(f"Error fetching matches since date: {e}")
+            return [], []
+
     def _extract_skill_order(self, match_id: str, platform: str, participant_id: int) -> Tuple[Optional[str], Optional[list[int]]]:
         """
         Extract skill order from timeline data.
@@ -177,7 +349,7 @@ class RiotAPIClient:
             skill_order_levels: e.g., [1, 2, 3, 4, 5, 6]
         """
         try:
-            timeline_data = self.lol_watcher.match.timeline_by_id(platform, match_id)
+            timeline_data = self.lol_watcher.match.timeline_by_match(platform, match_id)
             
             ability_map = {0: 'Q', 1: 'W', 2: 'E', 3: 'R'}
             
@@ -213,7 +385,7 @@ class RiotAPIClient:
             List of ItemPurchase objects sorted by timestamp
         """
         try:
-            timeline_data = self.lol_watcher.match.timeline_by_id(platform, match_id)
+            timeline_data = self.lol_watcher.match.timeline_by_match(platform, match_id)
             
             purchases = []
             previous_items = set()
