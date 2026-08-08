@@ -1,0 +1,119 @@
+/* frontend/src/components/PracticeTable.css */
+.practice-table-container {
+    background: #1a2a3a;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.practice-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.practice-header h3 {
+    font-size: 18px;
+    color: #f0e6d2;
+    margin: 0;
+}
+
+.practice-stats {
+    display: flex;
+    gap: 8px;
+    color: #8899aa;
+    font-size: 13px;
+    margin-top: 2px;
+}
+
+.sort-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #8899aa;
+    font-size: 13px;
+}
+
+.sort-controls select {
+    background: #0f1923;
+    color: #e0e0e0;
+    border: 1px solid #2a3a4a;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.champion-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.champion-table th {
+    text-align: left;
+    padding: 10px 12px;
+    color: #8899aa;
+    font-weight: 500;
+    border-bottom: 1px solid #2a3a4a;
+}
+
+.champion-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #1a2a3a;
+}
+
+.champion-name {
+    font-weight: 500;
+    color: #f0e6d2;
+}
+
+.positive {
+    color: #66dd88;
+}
+
+.negative {
+    color: #ee6666;
+}
+
+.practice-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    gap: 12px;
+    color: #667788;
+}
+
+.practice-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    color: #667788;
+}
+
+.hint {
+    font-size: 12px;
+    color: #556677;
+    margin-top: 4px;
+}
+
+.loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid #2a3a4a;
+    border-top-color: #88ccff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
