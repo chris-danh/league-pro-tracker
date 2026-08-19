@@ -52,8 +52,8 @@ class RiotAPIClient:
         except Exception as e:
             print(f"Error fetching summoner: {e}")
             return None
-    
-    def get_recent_matches(self, puuid: str, region: str, count: int = 20, include_timeline: bool = True) -> Tuple[list[Match], list[Matchup]]:
+
+    def get_recent_matches(self, puuid: str, region: str, count: int = 20, include_timeline: bool = True) -> Tuple[list[Match], list[Matchup], list[dict]]:
         """
         Get recent matches for a summoner using PUUID.
         
@@ -64,7 +64,10 @@ class RiotAPIClient:
             include_timeline: Whether to fetch timeline for skill order and item purchases
         
         Returns:
-            Tuple of (matches, matchups)
+            Tuple of (matches, matchups, participants)
+            - matches: List of Match objects for the pro player
+            - matchups: List of Matchup objects
+            - participants: List of dicts for all 10 players in each match
         """
         try:
             # Validate region
@@ -84,6 +87,7 @@ class RiotAPIClient:
             
             matches = []
             matchups = []
+            all_participants = []  # List of participants for all matches
             
             for match_id in match_ids:
                 # Get match details
@@ -138,11 +142,11 @@ class RiotAPIClient:
                     except Exception as e:
                         print(f"Warning: Could not extract timeline data for {match_id}: {e}")
                 
-                # Create Match object
+                # Create Match object for pro player
                 match_obj = Match(
                     match_id=match_id,
                     puuid=puuid,
-                    champion_id=participant['championId'],  # Use ID instead of name
+                    champion_id=participant['championId'],
                     role=participant.get('teamPosition', 'UNKNOWN'),
                     win=participant['win'],
                     kills=participant['kills'],
@@ -176,18 +180,73 @@ class RiotAPIClient:
                         patch=patch
                     )
                     matchups.append(matchup)
+                
+                # ============================================
+                # NEW: Parse all participants for this match
+                # ============================================
+                match_participants = []
+                for p in match_data['info']['participants']:
+                    # Extract keystone rune
+                    keystone_rune_id = None
+                    secondary_style_id = None
+                    
+                    perks = p.get('perks', {})
+                    styles = perks.get('styles', [])
+                    
+                    # Get primary and secondary styles
+                    for style in styles:
+                        selections = style.get('selections', [])
+                        # First selection is usually the keystone
+                        if selections:
+                            keystone_rune_id = selections[0].get('perk')
+                        
+                        if style.get('style') == 'secondary':
+                            secondary_style_id = style.get('styleId')
+                    
+                    # Extract items (end of game)
+                    items = {}
+                    for i in range(7):  # 0-6
+                        items[f'item_{i}'] = p.get(f'item{i}', 0)
+                    
+                    participant_data = {
+                        'match_id': match_id,
+                        'puuid': p['puuid'],
+                        'champion_id': p['championId'],
+                        'team_id': p['teamId'],
+                        'role': p.get('teamPosition', 'UNKNOWN'),
+                        'win': p['win'],
+                        'kills': p['kills'],
+                        'deaths': p['deaths'],
+                        'assists': p['assists'],
+                        'cs': p['totalMinionsKilled'],
+                        'gold_earned': p['goldEarned'],
+                        'total_damage': p['totalDamageDealtToChampions'],
+                        'vision_score': p.get('visionScore', 0),
+                        'summoner_spell_d': p['summoner1Id'],
+                        'summoner_spell_f': p['summoner2Id'],
+                        'keystone_rune_id': keystone_rune_id,
+                        'secondary_rune_style_id': secondary_style_id,
+                        'item_0': items.get('item_0', 0),
+                        'item_1': items.get('item_1', 0),
+                        'item_2': items.get('item_2', 0),
+                        'item_3': items.get('item_3', 0),
+                        'item_4': items.get('item_4', 0),
+                        'item_5': items.get('item_5', 0),
+                        'item_6': items.get('item_6', 0),
+                    }
+                    match_participants.append(participant_data)
+                
+                all_participants.extend(match_participants)
             
-            print(f"Retrieved {len(matches)} matches and {len(matchups)} matchups for {region}")
-            return matches, matchups
+            print(f"Retrieved {len(matches)} matches, {len(matchups)} matchups, and {len(all_participants)} participants for {region}")
+            return matches, matchups, all_participants
             
         except ApiError as err:
             print(f"API error fetching matches: {err}")
-            return [], []
+            return [], [], []
         except Exception as e:
             print(f"Error fetching matches: {e}")
-            return [], []
-
-# src/api/riot_client.py
+            return [], [], []
 
     def get_matches_since_date(
         self,
@@ -195,9 +254,9 @@ class RiotAPIClient:
         region: str,
         start_date: Optional[datetime] = None,
         max_count: int = 100
-    ) -> tuple[list[Match], list[Matchup]]:
+    ) -> tuple[list[Match], list[Matchup], list[dict]]:
         """
-        Get matches for a player since a specific date.
+        Get matches for a player since a specific date with all participants.
         If no start_date provided, get last 31 days.
         
         Args:
@@ -207,7 +266,7 @@ class RiotAPIClient:
             max_count: Maximum number of matches to fetch (default 100)
         
         Returns:
-            tuple: (list of Match objects, list of Matchup objects)
+            tuple: (list of Match objects, list of Matchup objects, list of participant dicts)
         """
         if start_date is None:
             start_date = datetime.now() - timedelta(days=31)
@@ -221,7 +280,6 @@ class RiotAPIClient:
                 region = "KR"
             
             platform = self.platform_routing[region]
-            
             # Get match IDs (ranked solo)
             match_ids = self.lol_watcher.match.matchlist_by_puuid(
                 platform,
@@ -232,6 +290,7 @@ class RiotAPIClient:
             
             matches = []
             matchups = []
+            all_participants = []
             
             for match_id in match_ids:
                 # Get match details
@@ -251,7 +310,6 @@ class RiotAPIClient:
 
                 if not participant:
                     continue
-                
                 # Get participant ID (1-indexed)
                 participant_id = match_data['info']['participants'].index(participant) + 1
                 
@@ -328,16 +386,68 @@ class RiotAPIClient:
                         patch=patch
                     )
                     matchups.append(matchup)
+                
+                # ============================================
+                # NEW: Parse all participants for this match
+                # ============================================
+                match_participants = []
+                for p in match_data['info']['participants']:
+                    # Extract runes (simplified)
+                    keystone_rune_id = None
+                    secondary_rune_style_id = None
+                    
+                    perks = p.get('perks', {})
+                    styles = perks.get('styles', [])
+                    
+                    for style in styles:
+                        selections = style.get('selections', [])
+                        # First selection is the keystone
+                        if selections and keystone_rune_id is None:
+                            keystone_rune_id = selections[0].get('perk')
+                        
+                        # Check if this is the secondary tree
+                        if style.get('style') == 'secondary':
+                            secondary_rune_style_id = style.get('styleId')
+                    
+                    participant_data = {
+                        'match_id': match_id,
+                        'puuid': p['puuid'],
+                        'champion_id': p['championId'],
+                        'team_id': p['teamId'],
+                        'role': p.get('teamPosition', 'UNKNOWN'),
+                        'win': p['win'],
+                        'kills': p['kills'],
+                        'deaths': p['deaths'],
+                        'assists': p['assists'],
+                        'cs': p['totalMinionsKilled'],
+                        'gold_earned': p['goldEarned'],
+                        'total_damage': p['totalDamageDealtToChampions'],
+                        'vision_score': p.get('visionScore', 0),
+                        'summoner_spell_d': p['summoner1Id'],
+                        'summoner_spell_f': p['summoner2Id'],
+                        'keystone_rune_id': keystone_rune_id,
+                        'secondary_rune_style_id': secondary_rune_style_id,
+                        'item_0': p.get('item0', 0),
+                        'item_1': p.get('item1', 0),
+                        'item_2': p.get('item2', 0),
+                        'item_3': p.get('item3', 0),
+                        'item_4': p.get('item4', 0),
+                        'item_5': p.get('item5', 0),
+                        'item_6': p.get('item6', 0),
+                    }
+                    match_participants.append(participant_data)
+                
+                all_participants.extend(match_participants)
             
-            print(f"Retrieved {len(matches)} matches and {len(matchups)} matchups since {start_date.strftime('%Y-%m-%d')}")
-            return matches, matchups
+            print(f"Retrieved {len(matches)} matches, {len(matchups)} matchups, and {len(all_participants)} participants since {start_date.strftime('%Y-%m-%d')}")
+            return matches, matchups, all_participants
             
         except ApiError as err:
             print(f"API error fetching matches since date: {err}")
-            return [], []
+            return [], [], []
         except Exception as e:
             print(f"Error fetching matches since date: {e}")
-            return [], []
+            return [], [], []
 
     def _extract_skill_order(self, match_id: str, platform: str, participant_id: int) -> Tuple[Optional[str], Optional[list[int]]]:
         """

@@ -28,6 +28,7 @@ class ProPlayerCollector:
             "matches_fetched": 0,
             "matches_saved": 0,
             "matchups_saved": 0,
+            "participants_saved": 0,
             "errors": 0,
             "start_time": time.time()
         }
@@ -65,7 +66,6 @@ class ProPlayerCollector:
                 return player
         return None
 
-
     def process_player(self, player_data: Dict, include_timeline: bool = True) -> bool:
         """
         Process a single player: fetch matches using stored PUUID.
@@ -85,7 +85,7 @@ class ProPlayerCollector:
             region = player_data.get('region', config.DEFAULT_REGION)
             team = player_data.get('player', 'Unknown')
             puuid = player_data.get('puuid', None)
-            target_role = player_data.get('role', None)  # ← Get the player's role from JSON
+            target_role = player_data.get('role', None)
             
             if not name or not tag:
                 print(f"   ⚠️ Missing IGN or tagline for player: {player_data}")
@@ -126,17 +126,18 @@ class ProPlayerCollector:
             start_date = datetime.now() - timedelta(days=28)
             print(f"   📊 Fetching matches since {start_date.strftime('%Y-%m-%d')} (timeline: {include_timeline})...")
             
-            matches, matchups = self.client.get_matches_since_date(
+            # FIXED: Unpack 3 values (matches, matchups, participants)
+            matches, matchups, participants = self.client.get_matches_since_date(
                 puuid,
                 region,
                 start_date=start_date,
                 max_count=200
             )
             
-            print(f"   📊 Found {len(matches)} matches and {len(matchups)} matchups in date range")
+            print(f"   📊 Found {len(matches)} matches, {len(matchups)} matchups, and {len(participants)} participants in date range")
             
             if not matches:
-                print(f"   ⚠️ No matches found for {name} in the last 31 days")
+                print(f"   ⚠️ No matches found for {name} in the last 28 days")
                 return True
             
             # Filter matches by role if target_role is specified
@@ -158,8 +159,27 @@ class ProPlayerCollector:
             
             # Save matches and matchups (skip duplicates)
             saved_matches, saved_matchups = db.save_matches_batch(matches, matchups)
-            
             print(f"   ✅ Saved {saved_matches}/{len(matches)} new matches and {saved_matchups}/{len(matchups)} new matchups for {name}")
+            
+            # NEW: Save participants
+            participant_count = 0
+            if participants:
+                # Group participants by match_id
+                participants_by_match = {}
+                for p in participants:
+                    match_id = p['match_id']
+                    if match_id not in participants_by_match:
+                        participants_by_match[match_id] = []
+                    participants_by_match[match_id].append(p)
+                
+                for match_id, match_participants in participants_by_match.items():
+                    # Only save participants for matches we saved
+                    if db.match_exists(match_id):
+                        if db.save_participants_batch(match_id, match_participants):
+                            participant_count += len(match_participants)
+                
+                self.stats["participants_saved"] += participant_count
+                print(f"   ✅ Saved {participant_count} participants for {len(participants_by_match)} matches")
             
             # Update stats
             self.stats["players_processed"] += 1
@@ -210,7 +230,8 @@ class ProPlayerCollector:
             
             # Fetch matches from the last 31 days
             start_date = datetime.now() - timedelta(days=31)
-            matches, matchups = self.client.get_matches_since_date(
+            # FIXED: Unpack 3 values
+            matches, matchups, participants = self.client.get_matches_since_date(
                 puuid,
                 region,
                 start_date=start_date
@@ -219,11 +240,27 @@ class ProPlayerCollector:
             # Save only new matches (duplicate check handled in batch save)
             saved_matches, saved_matchups = db.save_matches_batch(matches, matchups)
             
+            # Save participants
+            saved_participants = 0
+            if participants:
+                participants_by_match = {}
+                for p in participants:
+                    match_id = p['match_id']
+                    if match_id not in participants_by_match:
+                        participants_by_match[match_id] = []
+                    participants_by_match[match_id].append(p)
+                
+                for match_id, match_participants in participants_by_match.items():
+                    if db.match_exists(match_id):
+                        if db.save_participants_batch(match_id, match_participants):
+                            saved_participants += len(match_participants)
+            
             return {
                 "success": True,
                 "matches_fetched": len(matches),
                 "matches_saved": saved_matches,
                 "matchups_saved": saved_matchups,
+                "participants_saved": saved_participants,
                 "message": f"Saved {saved_matches} new matches"
             }
             
@@ -266,7 +303,32 @@ class ProPlayerCollector:
             "matches_fetched": self.stats["matches_fetched"],
             "matches_saved": self.stats["matches_saved"],
             "matchups_saved": self.stats["matchups_saved"],
+            "participants_saved": self.stats["participants_saved"],
             "errors": self.stats["errors"]
+        }
+    
+    def fetch_all_players(self, include_timeline: bool = True) -> Dict:
+        """Fetch matches for ALL players in pros.json (bulk mode)."""
+        players = self.load_pro_players()
+        if not players:
+            return {"success": False, "error": "No players found in pros.json"}
+        
+        print(f"\n📋 Processing {len(players)} players...")
+        
+        for i, player in enumerate(players, 1):
+            print(f"\n{'─' * 40}")
+            print(f"📌 Player {i}/{len(players)}")
+            self.process_player(player, include_timeline)
+        
+        return {
+            "success": True,
+            "players_processed": self.stats["players_processed"],
+            "matches_fetched": self.stats["matches_fetched"],
+            "matches_saved": self.stats["matches_saved"],
+            "matchups_saved": self.stats["matchups_saved"],
+            "participants_saved": self.stats["participants_saved"],
+            "errors": self.stats["errors"],
+            "total_players": len(players)
         }
     
     def print_summary(self):
@@ -280,11 +342,12 @@ class ProPlayerCollector:
         print(f"📊 Matches fetched: {self.stats['matches_fetched']}")
         print(f"💾 Matches saved: {self.stats['matches_saved']}")
         print(f"🔗 Matchups saved: {self.stats['matchups_saved']}")
+        print(f"👥 Participants saved: {self.stats['participants_saved']}")
         print(f"❌ Errors: {self.stats['errors']}")
         print(f"⏱️  Time elapsed: {elapsed:.1f} seconds")
         print("=" * 60)
         
-        # Database stats - FIXED: use _get_db() instead of self.db
+        # Database stats
         db = self._get_db()
         try:
             all_players = db.get_all_players()

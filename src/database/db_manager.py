@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 from typing import Optional, List
 from src.models import Player, Match, Matchup, ChampionStats, PlayerSummary, ItemPurchase
 
-
 class DatabaseManager:
 
     def __init__(self, db_path: str = "league_data.db"):
@@ -24,9 +23,13 @@ class DatabaseManager:
         except (sqlite3.ProgrammingError, sqlite3.OperationalError, AttributeError):
             self._connect()
 
+
     def _create_tables(self):
         """Create all necessary tables if they don't exist"""
-        # Players table
+        
+        # ============================================
+        # 1. PLAYERS TABLE
+        # ============================================
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS players (
                 puuid TEXT PRIMARY KEY,
@@ -38,7 +41,9 @@ class DatabaseManager:
             )
         ''')
         
-        # Matches table - with game_creation included
+        # ============================================
+        # 2. MATCHES TABLE
+        # ============================================
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS matches (
                 match_id TEXT PRIMARY KEY,
@@ -65,7 +70,43 @@ class DatabaseManager:
             )
         ''')
         
-        # Items table
+        # ============================================
+        # 3. PARTICIPANTS TABLE (UPDATED with runes and items)
+        # ============================================
+        self.cursor.execute('''
+            CREATE TABLE IF NOT EXISTS participants (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                match_id TEXT NOT NULL,
+                puuid TEXT NOT NULL,
+                champion_id INTEGER NOT NULL,
+                team_id INTEGER NOT NULL,
+                role TEXT,
+                win INTEGER NOT NULL,
+                kills INTEGER NOT NULL,
+                deaths INTEGER NOT NULL,
+                assists INTEGER NOT NULL,
+                cs INTEGER NOT NULL,
+                gold_earned INTEGER NOT NULL,
+                total_damage INTEGER NOT NULL,
+                vision_score INTEGER NOT NULL,
+                summoner_spell_d INTEGER NOT NULL,
+                summoner_spell_f INTEGER NOT NULL,
+                keystone_rune_id INTEGER,
+                secondary_rune_style_id INTEGER,
+                item_0 INTEGER,
+                item_1 INTEGER,
+                item_2 INTEGER,
+                item_3 INTEGER,
+                item_4 INTEGER,
+                item_5 INTEGER,
+                item_6 INTEGER,
+                FOREIGN KEY (match_id) REFERENCES matches(match_id)
+            )
+        ''')
+        
+        # ============================================
+        # 4. MATCH ITEMS TABLE (Pro player only - detailed)
+        # ============================================
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS match_items (
                 match_id TEXT NOT NULL,
@@ -76,7 +117,9 @@ class DatabaseManager:
             )
         ''')
         
-        # Runes table
+        # ============================================
+        # 5. MATCH RUNES TABLE (Pro player only - detailed)
+        # ============================================
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS match_runes (
                 match_id TEXT NOT NULL,
@@ -87,7 +130,9 @@ class DatabaseManager:
             )
         ''')
         
-        # Matchups table
+        # ============================================
+        # 6. MATCHUPS TABLE
+        # ============================================
         self.cursor.execute('''
             CREATE TABLE IF NOT EXISTS matchups (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -101,13 +146,26 @@ class DatabaseManager:
             )
         ''')
         
-        # Create indexes
+        # ============================================
+        # INDEXES FOR PERFORMANCE
+        # ============================================
+        
+        # Matches indexes
         self.cursor.execute('CREATE INDEX IF NOT EXISTS idx_matches_puuid ON matches(puuid)')
         self.cursor.execute('CREATE INDEX IF NOT EXISTS idx_matches_champion_id ON matches(champion_id)')
         self.cursor.execute('CREATE INDEX IF NOT EXISTS idx_matches_patch ON matches(patch)')
         self.cursor.execute('CREATE INDEX IF NOT EXISTS idx_matches_game_creation ON matches(game_creation)')
+        
+        # Participants indexes
+        self.cursor.execute('CREATE INDEX IF NOT EXISTS idx_participants_match_id ON participants(match_id)')
+        self.cursor.execute('CREATE INDEX IF NOT EXISTS idx_participants_puuid ON participants(puuid)')
+        self.cursor.execute('CREATE INDEX IF NOT EXISTS idx_participants_champion_id ON participants(champion_id)')
+        self.cursor.execute('CREATE INDEX IF NOT EXISTS idx_participants_keystone ON participants(keystone_rune_id)')
+        
+        # Matchups indexes
         self.cursor.execute('CREATE INDEX IF NOT EXISTS idx_matchups_ally ON matchups(ally_champion_id)')
         self.cursor.execute('CREATE INDEX IF NOT EXISTS idx_matchups_enemy ON matchups(enemy_champion_id)')
+        self.cursor.execute('CREATE INDEX IF NOT EXISTS idx_matchups_patch ON matchups(patch)')
         
         self.conn.commit()
         print("✅ Database tables created successfully")
@@ -142,21 +200,22 @@ class DatabaseManager:
                 ])
             
             self.cursor.execute('''
-                INSERT OR REPLACE INTO matches 
-                (match_id, puuid, champion_id, role, win, kills, deaths, 
-                 assists, cs, game_duration, total_damage, vision_score, 
-                 gold_earned, summoner_spell_d, summoner_spell_f,
-                 patch, game_creation, skill_order, skill_order_levels, item_purchases)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                match.match_id, match.puuid, match.champion_id, match.role,
-                int(match.win), match.kills, match.deaths, match.assists,
-                match.cs, match.game_duration, match.total_damage,
-                match.vision_score, match.gold_earned,
-                match.summoner_spell_d, match.summoner_spell_f,
-                match.patch, match.game_creation,
-                match.skill_order, skill_order_levels_json, item_purchases_json
-            ))
+            INSERT OR REPLACE INTO matches 
+            (match_id, puuid, champion_id, role, win, kills, deaths, 
+             assists, cs, game_duration, total_damage, vision_score, 
+             gold_earned, summoner_spell_d, summoner_spell_f,
+             patch, game_creation, 
+             skill_order, skill_order_levels, item_purchases)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (
+            match.match_id, match.puuid, match.champion_id, match.role,
+            int(match.win), match.kills, match.deaths, match.assists,
+            match.cs, match.game_duration, match.total_damage,
+            match.vision_score, match.gold_earned,
+            match.summoner_spell_d, match.summoner_spell_f,
+            match.patch, match.game_creation,
+            match.skill_order, skill_order_levels_json, item_purchases_json
+        ))
             
             # Save items if present
             if match.items:
@@ -487,6 +546,70 @@ class DatabaseManager:
         
         self.conn.commit()
         return saved_matches, saved_matchups
+
+    # src/database/db_manager.py
+
+    def save_participants_batch(self, match_id: str, participants: list[dict]) -> bool:
+        """
+        Save all participants for a match with runes and items.
+        
+        Args:
+            match_id: The match ID  
+            participants: List of participant dictionaries with fields:
+                - puuid, champion_id, team_id, role, win
+                - kills, deaths, assists, cs
+                - gold_earned, total_damage, vision_score
+                - summoner_spell_d, summoner_spell_f
+                - keystone_rune_id, primary_rune_style_id, secondary_rune_style_id
+                - item_0 through item_6
+        """
+        try:
+            self._ensure_connection()
+            
+            # Delete existing participants for this match (for REPLACE scenario)
+            self.cursor.execute('DELETE FROM participants WHERE match_id = ?', (match_id,))
+            
+            for p in participants:
+                self.cursor.execute('''
+                    INSERT INTO participants (
+                        match_id, puuid, champion_id, team_id, role, win,
+                        kills, deaths, assists, cs, gold_earned, total_damage,
+                        vision_score, summoner_spell_d, summoner_spell_f,
+                        keystone_rune_id, secondary_rune_style_id,
+                        item_0, item_1, item_2, item_3, item_4, item_5, item_6
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (
+                    match_id,
+                    p['puuid'],
+                    p['champion_id'],
+                    p['team_id'],
+                    p['role'],
+                    int(p['win']),
+                    p['kills'],
+                    p['deaths'],
+                    p['assists'],
+                    p['cs'],
+                    p['gold_earned'],
+                    p['total_damage'],
+                    p['vision_score'],
+                    p['summoner_spell_d'],
+                    p['summoner_spell_f'],
+                    p.get('keystone_rune_id'),
+                    p.get('secondary_rune_style_id'),
+                    p.get('item_0', 0),
+                    p.get('item_1', 0),
+                    p.get('item_2', 0),
+                    p.get('item_3', 0),
+                    p.get('item_4', 0),
+                    p.get('item_5', 0),
+                    p.get('item_6', 0)
+                ))
+            
+            self.conn.commit()
+            return True
+        except Exception as e:
+            print(f"Error saving participants for match {match_id}: {e}")
+            return False
 
     def close(self):
         """Close the database connection."""
