@@ -1,0 +1,246 @@
+/* frontend/src/components/MatchHistory.css */
+
+.match-history {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.match-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.match-card {
+    display: grid;
+    grid-template-columns: 36px 1fr 1fr 1fr 1.5fr 28px;
+    align-items: center;
+    padding: 10px 14px;
+    border-radius: 6px;
+    background: var(--bg-card);
+    cursor: pointer;
+    transition: all 0.2s;
+    gap: 8px;
+}
+
+.match-card:hover {
+    background: var(--bg-hover);
+}
+
+.match-card.win {
+    border-left: 3px solid var(--accent-green);
+}
+
+.match-card.loss {
+    border-left: 3px solid var(--accent-red);
+}
+
+.match-result {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.match-card.win .match-result {
+    color: var(--accent-green);
+}
+
+.match-card.loss .match-result {
+    color: var(--accent-red);
+}
+
+.match-champion-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.match-kda {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.match-stats {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.match-items {
+    display: flex;
+    gap: 4px;
+    justify-content: flex-end;
+}
+
+.match-expand {
+    font-size: 12px;
+    color: var(--text-dark);
+    text-align: center;
+}
+
+/* Expanded Details */
+.match-details {
+    background: var(--bg-secondary);
+    border-radius: 0 0 6px 6px;
+    padding: 14px 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+.match-details h4 {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+}
+
+.build-section {
+    margin-bottom: 12px;
+}
+
+.build-section h5 {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.build-items {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.build-runes {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.participants-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 16px;
+}
+
+.participant-item {
+    display: grid;
+    grid-template-columns: 80px 70px 1fr;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    gap: 6px;
+}
+
+.participant-item.team-blue {
+    background: rgba(30, 60, 120, 0.2);
+}
+
+.participant-item.team-red {
+    background: rgba(120, 30, 30, 0.2);
+}
+
+.participant-kda {
+    color: var(--text-secondary);
+}
+
+.participant-items {
+    display: flex;
+    gap: 2px;
+}
+
+/* Load More Button */
+.load-more-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 10px;
+    color: var(--text-muted);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 8px;
+    text-align: center;
+}
+
+.load-more-btn:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+/* Loading / Empty */
+.loading-text {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.empty-state {
+    padding: 20px;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .match-card {
+        grid-template-columns: 28px 0.8fr 1fr 1fr 1fr 20px;
+        padding: 8px 10px;
+        font-size: 12px;
+        gap: 4px;
+    }
+
+    .match-items {
+        display: none;
+    }
+
+    .match-stats {
+        display: none;
+    }
+
+    .participants-grid {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+
+    .participant-item {
+        grid-template-columns: 60px 50px 1fr;
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 480px) {
+    .match-card {
+        grid-template-columns: 24px 0.7fr 1fr 0.8fr 20px;
+        font-size: 11px;
+        padding: 6px 8px;
+        gap: 3px;
+    }
+
+    .match-stats {
+        display: none;
+    }
+
+    .match-result {
+        font-size: 12px;
+    }
+
+    .match-champion-wrapper {
+        font-size: 12px;
+    }
+
+    .match-kda {
+        font-size: 12px;
+    }
+
+    .match-details {
+        padding: 10px 12px;
+    }
+
+    .participant-item {
+        grid-template-columns: 50px 40px 1fr;
+        font-size: 10px;
+    }
+}

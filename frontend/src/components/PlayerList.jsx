@@ -2,6 +2,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import './PlayerList.css';
+import ChampionAsset from './ChampionAsset';
+import PlayerAvatar from './PlayerAvatar';
 
 const REGION_NAMES = {
     'KR': '🇰🇷 LCK (Korea)',
@@ -17,7 +19,7 @@ const REGION_ROUTES = {
     'CN': '/region/CN',
 };
 
-const PlayerList = ({ groupedPlayers, loading, getChampionName }) => {
+const PlayerList = ({ groupedPlayers, loading, getChampionName, onSelectPlayer }) => {
     if (loading) {
         return <div className="loading-text">Loading players...</div>;
     }
@@ -46,20 +48,15 @@ const PlayerList = ({ groupedPlayers, loading, getChampionName }) => {
                         {players.map((player) => (
                             <Link
                                 key={player.puuid}
-                                to={`/player/${player.name}`}  // ← Uses name, not puuid!
+                                to={`/player/${player.name}`}
                                 className="player-card"
+                                onClick={() => onSelectPlayer && onSelectPlayer(player)}
                             >
-                                <div className="player-card-content">
-                                    <div className="player-avatar">
-                                        <span className="player-avatar-text">
-                                            {player.name.charAt(0)}
-                                        </span>
-                                    </div>
-                                    <div className="player-info">
-                                        <div className="player-name">{player.name}</div>
-                                        <div className="player-team">{player.team || 'Free Agent'}</div>
-                                        <div className="player-tag">{player.tag}</div>
-                                    </div>
+                                <PlayerAvatar player={player} size="medium" />
+                                <div className="player-info">
+                                    <div className="player-name">{player.name}</div>
+                                    <div className="player-team">{player.team || 'Free Agent'}</div>
+                                    <div className="player-tag">{player.tag}</div>
                                 </div>
                             </Link>
                         ))}

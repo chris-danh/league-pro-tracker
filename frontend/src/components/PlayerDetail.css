@@ -1,151 +1,120 @@
-/* frontend/src/components/PlayerDetail.css */
-.player-detail {
-    padding: 24px 32px;
-    max-width: 1200px;
-    margin: 0 auto;
-    width: 100%;
-}
+/* frontend/src/components/PlayerDetail.css - Updated header styles */
 
+/* ============================================
+   PLAYER DETAIL HEADER
+   ============================================ */
 .player-detail-header {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 16px;
     margin-bottom: 24px;
     flex-wrap: wrap;
+    padding: 16px 20px;
+    background: var(--bg-card);
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
 }
 
 .back-button {
-    color: #88ccff;
+    color: var(--accent-blue);
     text-decoration: none;
     font-size: 14px;
     padding: 6px 12px;
     border-radius: 4px;
-    background: #1a2a3a;
-    transition: background 0.2s;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
 }
 
 .back-button:hover {
-    background: #2a3a4a;
+    background: var(--bg-hover);
 }
 
+/* ============================================
+   PLAYER DETAIL INFO
+   ============================================ */
 .player-detail-info {
     display: flex;
     align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
+    gap: 16px;
     flex: 1;
 }
 
-.player-detail-info h2 {
-    font-size: 26px;
-    color: #f0e6d2;
-    margin: 0;
+.player-info-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 }
 
-.team-badge {
-    background: #1a3a5a;
-    padding: 4px 12px;
-    border-radius: 4px;
-    font-size: 13px;
-    color: #88ccff;
+.player-info-text h2 {
+    font-size: 24px;
+    color: var(--text-primary);
+    margin: 0;
+    font-weight: 600;
+}
+
+.player-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 .region-badge {
-    background: #2a1a3a;
-    padding: 4px 12px;
-    border-radius: 4px;
     font-size: 13px;
-    color: #ff88cc;
+    color: var(--accent-pink);
+    font-weight: 500;
 }
 
-.tag-badge {
-    background: #1a2a3a;
-    padding: 4px 12px;
-    border-radius: 4px;
+.ign-tag {
     font-size: 13px;
-    color: #8899aa;
+    color: var(--text-muted);
+    font-family: monospace;
 }
 
-.refresh-btn {
-    background: #1a3a5a;
-    border: none;
-    padding: 8px 20px;
-    border-radius: 6px;
-    color: #f0e6d2;
-    font-size: 14px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.refresh-btn:hover:not(:disabled) {
-    background: #2a5a7a;
-}
-
-.refresh-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.refresh-btn.loading {
-    background: #1a2a3a;
-}
-
-.refresh-message {
-    padding: 10px 16px;
-    border-radius: 6px;
-    margin-bottom: 16px;
-    font-size: 14px;
-}
-
-.refresh-message.success {
-    background: #1a3a2a;
-    color: #66dd88;
-    border: 1px solid #2a5a3a;
-}
-
-.refresh-message.error {
-    background: #3a1a1a;
-    color: #ee6666;
-    border: 1px solid #5a2a2a;
-}
-
-.loading-text {
-    padding: 40px 20px;
-    text-align: center;
-    color: #667788;
-}
-
-.empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 60px 20px;
-    color: #667788;
-    gap: 8px;
-}
-
-.empty-state h2 {
-    color: #f0e6d2;
-}
-
-.empty-state a {
-    color: #88ccff;
-    text-decoration: none;
-}
-
+/* ============================================
+   RESPONSIVE
+   ============================================ */
 @media (max-width: 768px) {
-    .player-detail {
-        padding: 16px;
-    }
-
     .player-detail-header {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
         gap: 12px;
+        padding: 12px 16px;
     }
 
-    .player-detail-info h2 {
-        font-size: 22px;
+    .player-detail-info {
+        flex-wrap: wrap;
+    }
+
+    .player-info-text h2 {
+        font-size: 20px;
+    }
+
+    .player-avatar-large {
+        width: 72px;
+        height: 72px;
+    }
+}
+
+@media (max-width: 480px) {
+    .player-detail-header {
+        padding: 10px 12px;
+    }
+
+    .player-info-text h2 {
+        font-size: 18px;
+    }
+
+    .player-avatar-large {
+        width: 56px;
+        height: 56px;
+    }
+
+    .region-badge,
+    .ign-tag {
+        font-size: 11px;
     }
 }

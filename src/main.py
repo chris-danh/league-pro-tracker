@@ -131,7 +131,7 @@ class ProPlayerCollector:
                 puuid,
                 region,
                 start_date=start_date,
-                max_count=200
+                db_connection=db, include_timeline=True, batch_size=20
             )
             
             print(f"   📊 Found {len(matches)} matches, {len(matchups)} matchups, and {len(participants)} participants in date range")
@@ -225,42 +225,22 @@ class ProPlayerCollector:
                         "matches_saved": 0
                     }
             
-            # Delete matches older than 31 days
-            db.delete_old_matches(31)
-            
-            # Fetch matches from the last 31 days
-            start_date = datetime.now() - timedelta(days=31)
-            # FIXED: Unpack 3 values
-            matches, matchups, participants = self.client.get_matches_since_date(
+            # Use get_recent_matches for quick refresh (only 20 matches)
+            matches, matchups, participants = self.client.get_recent_matches(
                 puuid,
                 region,
-                start_date=start_date
+                count=20,  # ← Only 20 matches, not 28 days
+                include_timeline=True
             )
             
             # Save only new matches (duplicate check handled in batch save)
             saved_matches, saved_matchups = db.save_matches_batch(matches, matchups)
-            
-            # Save participants
-            saved_participants = 0
-            if participants:
-                participants_by_match = {}
-                for p in participants:
-                    match_id = p['match_id']
-                    if match_id not in participants_by_match:
-                        participants_by_match[match_id] = []
-                    participants_by_match[match_id].append(p)
-                
-                for match_id, match_participants in participants_by_match.items():
-                    if db.match_exists(match_id):
-                        if db.save_participants_batch(match_id, match_participants):
-                            saved_participants += len(match_participants)
             
             return {
                 "success": True,
                 "matches_fetched": len(matches),
                 "matches_saved": saved_matches,
                 "matchups_saved": saved_matchups,
-                "participants_saved": saved_participants,
                 "message": f"Saved {saved_matches} new matches"
             }
             
@@ -293,19 +273,31 @@ class ProPlayerCollector:
         print(f"📌 Player role: {role}")
         
         # Process the player
-        success = self.process_player(player_data, include_timeline)
         
-        return {
-            "success": success,
-            "player": game_name,
-            "tag": tag_line,
-            "role": role,
-            "matches_fetched": self.stats["matches_fetched"],
-            "matches_saved": self.stats["matches_saved"],
-            "matchups_saved": self.stats["matchups_saved"],
-            "participants_saved": self.stats["participants_saved"],
-            "errors": self.stats["errors"]
+
+        self.stats = {
+        "players_processed": 0,
+        "matches_fetched": 0,
+        "matches_saved": 0,
+        "matchups_saved": 0,
+        "participants_saved": 0,
+        "errors": 0,
+        "start_time": time.time()
         }
+
+        success = self.process_player(player_data, include_timeline)
+        return {
+        "success": True,
+        "player": game_name,
+        "tag": tag_line,
+        "role": role,
+        "matches_fetched": self.stats["matches_fetched"],
+        "matches_saved": self.stats["matches_saved"],
+        "matchups_saved": self.stats["matchups_saved"],
+        "participants_saved": self.stats["participants_saved"],
+        "errors": self.stats["errors"],
+        "message": f"Fetched {self.stats['matches_fetched']} matches, saved {self.stats['matches_saved']} new ones" if self.stats['matches_saved'] > 0 else "No new matches found"
+    }
     
     def fetch_all_players(self, include_timeline: bool = True) -> Dict:
         """Fetch matches for ALL players in pros.json (bulk mode)."""
@@ -382,7 +374,7 @@ if __name__ == "__main__":
             game_name = sys.argv[1]
             tag_line = sys.argv[2]
             count = int(sys.argv[3]) if len(sys.argv) >= 4 else 20
-            timeline = sys.argv[4].lower() == 'true' if len(sys.argv) >= 5 else False
+            timeline = True
             
             result = collector.fetch_player(game_name, tag_line, count, timeline)
             print(f"\nResult: {result}")

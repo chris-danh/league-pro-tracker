@@ -41,6 +41,9 @@ class ItemPurchase:
     # represents when and what item was purchased in a match
     item_id: int
     timestamp: int
+    is_core: bool = False
+    core_order: Optional[int] = None
+    sold_timestamp: Optional[int] = None
 
 @dataclass
 class Match:
@@ -72,11 +75,11 @@ class Match:
     
     # skill order
     skill_order: str
-    skill_order_levels: list[int]
 
     # item build order
     item_purchases: list[ItemPurchase]
 
+    rune_page: Optional[dict] = None
 
 
 @dataclass

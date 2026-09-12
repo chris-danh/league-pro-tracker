@@ -1,70 +1,54 @@
 // frontend/src/components/PlayerDetail.jsx
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import './PlayerDetail.css';
-import PracticeTable from './PracticeTable';
-import { getPracticeStats, refreshPlayer } from '../api/client';
+import ChampionList from './ChampionList';
+import ChampionDetail from './ChampionDetail';
+import MatchHistory from './MatchHistory';
+import PlayerAvatar from './PlayerAvatar';
 
-const PlayerDetail = ({ getPlayerByName, getChampionName }) => {
+const PlayerDetail = ({
+    players,
+    selectedPlayer,
+    champions,
+    championDetails,
+    matches,
+    totalMatches,
+    loading,
+    getChampionName,
+    championMap,
+    selectedChampionId,
+    onSelectChampion,
+    onLoadMoreMatches,
+    onRefresh,
+    onBack
+}) => {
     const { playerName } = useParams();
     const navigate = useNavigate();
     const [player, setPlayer] = useState(null);
-    const [practiceData, setPracticeData] = useState(null);
-    const [loading, setLoading] = useState({ player: true, practice: false, refresh: false });
-    const [refreshMessage, setRefreshMessage] = useState(null);
 
     useEffect(() => {
-        // Find player by name
-        const found = getPlayerByName(playerName);
-        if (found) {
-            setPlayer(found);
-            loadPracticeData(found.puuid);
+        if (selectedPlayer && selectedPlayer.name.toLowerCase() === playerName.toLowerCase()) {
+            setPlayer(selectedPlayer);
+            return;
         }
-        setLoading(prev => ({ ...prev, player: false }));
-    }, [playerName]);
-
-    const loadPracticeData = async (puuid) => {
-        setLoading(prev => ({ ...prev, practice: true }));
-        try {
-            const data = await getPracticeStats(puuid);
-            setPracticeData(data);
-        } catch (error) {
-            console.error('Failed to load practice stats:', error);
-            setPracticeData(null);
-        } finally {
-            setLoading(prev => ({ ...prev, practice: false }));
+        if (players && players.length > 0) {
+            const found = players.find(p => p.name.toLowerCase() === playerName.toLowerCase());
+            setPlayer(found || null);
         }
-    };
+    }, [playerName, players, selectedPlayer]);
 
-    const handleRefresh = async () => {
-        if (!player) return;
-
-        setLoading(prev => ({ ...prev, refresh: true }));
-        setRefreshMessage(null);
-
-        try {
-            const result = await refreshPlayer(player.name, player.tag);
-            setRefreshMessage({
-                type: 'success',
-                text: `Refreshed! ${result.matches_saved || result.matches_fetched} matches saved.`
-            });
-            await loadPracticeData(player.puuid);
-        } catch (error) {
-            setRefreshMessage({
-                type: 'error',
-                text: error.message || 'Failed to refresh data'
-            });
-        } finally {
-            setLoading(prev => ({ ...prev, refresh: false }));
-        }
-    };
-
-    // Navigate back to home
     const handleBack = () => {
+        if (onBack) {
+            onBack();
+        }
         navigate('/');
     };
 
-    if (loading.player) {
+    // ✅ Calculate hasMore
+    const hasMore = matches.length < totalMatches;
+
+    if (loading.players && !player) {
         return <div className="loading-text">Loading player...</div>;
     }
 
@@ -79,35 +63,71 @@ const PlayerDetail = ({ getPlayerByName, getChampionName }) => {
     }
 
     return (
-        <div className="player-detail">
-            <div className="player-detail-header">
-                <button onClick={handleBack} className="back-button">← Back</button>
-                <div className="player-detail-info">
+    <div className="player-detail">
+        {/* Header */}
+        <div className="player-detail-header">
+            <button onClick={handleBack} className="back-button">← Back</button>
+            <div className="player-detail-info">
+                <PlayerAvatar player={player} size="large" />
+                <div className="player-info-text">
+                    {/* Line 1: Player Name (e.g., "GEN Kiin" or "T1 Faker") */}
                     <h2>{player.name}</h2>
-                    <span className="team-badge">{player.team || 'Free Agent'}</span>
-                    <span className="region-badge">{player.region}</span>
-                    <span className="tag-badge">#{player.tag}</span>
+                    {/* Line 2: Region + IGN + Tagline */}
+                    <div className="player-meta">
+                        <span className="region-badge">{player.region}</span>
+                        <span className="ign-tag">{player.ign} #{player.tag}</span>
+                    </div>
                 </div>
-                <button
-                    className={`refresh-btn ${loading.refresh ? 'loading' : ''}`}
-                    onClick={handleRefresh}
-                    disabled={loading.refresh}
-                >
-                    {loading.refresh ? '⏳ Fetching...' : '🔄 Refresh Data'}
-                </button>
             </div>
+            <button
+                className={`refresh-btn ${loading.refresh ? 'loading' : ''}`}
+                onClick={onRefresh}
+                disabled={loading.refresh || !player}
+            >
+                {loading.refresh ? '⏳ Fetching...' : '🔄 Refresh Data'}
+            </button>
+        </div>
 
-            {refreshMessage && (
-                <div className={`refresh-message ${refreshMessage.type}`}>
-                    {refreshMessage.text}
+            {/* Two-column layout */}
+            <div className="player-content">
+                {/* Left column */}
+                <div className="left-column">
+                    <div className="section">
+                        <h3>Champions Played</h3>
+                        <ChampionList
+                            champions={champions}
+                            loading={loading.champions}
+                            selectedChampionId={selectedChampionId}
+                            onSelectChampion={onSelectChampion}
+                            getChampionName={getChampionName}
+                        />
+                    </div>
+
+                    <ChampionDetail
+                        details={championDetails}
+                        loading={loading.championDetails}
+                        getChampionName={getChampionName}
+                        championMap={championMap}
+                        puuid={player?.puuid}
+                        onRefresh={onRefresh}
+                    />
                 </div>
-            )}
 
-            <PracticeTable
-                data={practiceData}
-                loading={loading.practice}
-                getChampionName={getChampionName}
-            />
+                {/* Right column */}
+                <div className="right-column">
+                    <div className="section">
+                        <h3>Match History</h3>
+                        <MatchHistory
+                            matches={matches}
+                            loading={loading.matches}
+                            getChampionName={getChampionName}
+                            championMap={championMap}
+                            onLoadMore={onLoadMoreMatches}
+                            hasMore={hasMore}
+                        />
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };

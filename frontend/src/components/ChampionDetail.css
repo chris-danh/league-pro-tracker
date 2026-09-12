@@ -1,0 +1,657 @@
+/* frontend/src/components/ChampionDetail.css */
+
+.champion-detail {
+    background: var(--bg-card);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-top: 8px;
+    border: 1px solid var(--border-color);
+}
+
+/* ===== CHAMPION HEADER ===== */
+.champion-detail-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.champion-detail-title h3 {
+    font-size: 20px;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.champion-detail-title .champion-games {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.clear-filter-btn {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 2px 10px;
+    color: var(--text-muted);
+    font-size: 11px;
+    cursor: pointer;
+    margin-left: 8px;
+    transition: all 0.2s;
+}
+
+.clear-filter-btn:hover {
+    background: var(--bg-hover);
+}
+
+/* ===== STAT GRID ===== */
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.stat-card {
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    padding: 12px;
+    text-align: center;
+}
+
+.stat-label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.stat-value {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.stat-value.positive {
+    color: var(--accent-green);
+}
+
+.stat-value.negative {
+    color: var(--accent-red);
+}
+
+/* ===== DETAIL SECTIONS ===== */
+.detail-section {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+}
+
+.detail-section h4 {
+    font-size: 13px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+}
+
+/* ============================================
+   SECTION HEADER
+   ============================================ */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.toggle-btn {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 2px 8px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.toggle-btn:hover {
+    background: var(--bg-hover);
+}
+
+/* ============================================
+   SKILL ORDER - SQUARE GRID WITH ICONS AND NUMBERS
+   ============================================ */
+.skill-order-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.skill-order-grid-wrapper {
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+}
+
+.skill-order-grid-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    font-size: 12px;
+    flex-wrap: wrap;
+}
+
+.skill-order-priority {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: monospace;
+    letter-spacing: 0.5px;
+}
+
+.skill-order-usage {
+    color: var(--text-muted);
+}
+
+.skill-order-winrate {
+    font-weight: 600;
+}
+
+.skill-order-winrate.positive {
+    color: var(--accent-green);
+}
+
+.skill-order-winrate.negative {
+    color: var(--accent-red);
+}
+
+.skill-order-variations {
+    font-size: 10px;
+    color: var(--text-muted);
+    background: var(--bg-card);
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.skill-order-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.skill-order-grid-row {
+    display: grid;
+    grid-template-columns: 32px repeat(13, 1fr);
+    gap: 2px;
+    align-items: center;
+}
+
+.skill-order-grid-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 28px;
+    border-radius: 3px;
+}
+
+/* Ability icon column */
+.ability-icon-cell {
+    background: transparent;
+    padding: 0;
+}
+
+.ability-icon-cell .champion-asset {
+    width: 28px;
+    height: 28px;
+}
+
+/* Square styles - Filled vs Empty */
+.skill-square {
+    height: 28px;
+    width: 100%;
+    border-radius: 3px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 11px;
+}
+
+.skill-square.filled {
+    background: var(--accent-blue);
+    border: 1px solid var(--accent-blue);
+    color: #ffffff;
+}
+
+.skill-square.empty {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    opacity: 0.4;
+}
+
+.skill-level-number {
+    font-size: 11px;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.skill-order-empty {
+    padding: 16px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+/* ============================================
+   CORE ITEMS
+   ============================================ */
+.core-items-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.core-items-column {
+    background: var(--bg-secondary);
+    border-radius: 6px;
+    padding: 12px;
+}
+
+.core-items-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.core-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.core-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px;
+    background: var(--bg-card);
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.core-item:hover {
+    background: var(--bg-hover);
+}
+
+.core-item-usage {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+/* ============================================
+   RUNES
+   ============================================ */
+.rune-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.rune-item {
+    background: var(--bg-secondary);
+    border-radius: 4px;
+    padding: 4px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+}
+
+.rune-usage {
+    color: var(--text-muted);
+}
+
+.rune-winrate {
+    font-weight: 600;
+}
+
+.rune-winrate.positive {
+    color: var(--accent-green);
+}
+
+.rune-winrate.negative {
+    color: var(--accent-red);
+}
+
+/* ============================================
+   SUMMONER SPELLS
+   ============================================ */
+.spell-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.spell-item {
+    background: var(--bg-secondary);
+    border-radius: 4px;
+    padding: 4px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+}
+
+.spell-icons {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.spell-combo {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.spell-usage {
+    color: var(--text-muted);
+}
+
+.spell-winrate {
+    font-weight: 600;
+}
+
+.spell-winrate.positive {
+    color: var(--accent-green);
+}
+
+.spell-winrate.negative {
+    color: var(--accent-red);
+}
+
+
+/* ============================================
+   STARTING ITEMS
+   ============================================ */
+.starting-items-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.starting-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px;
+    background: var(--bg-secondary);
+    border-radius: 4px;
+    min-width: 60px;
+}
+
+.item-usage {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+/* ============================================
+   MATCHUPS
+   ============================================ */
+.matchup-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.matchup-item {
+    background: var(--bg-secondary);
+    border-radius: 4px;
+    padding: 4px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.matchup-item:hover {
+    background: var(--bg-hover);
+}
+
+.matchup-item.active {
+    background: var(--bg-active);
+    border: 1px solid var(--accent-blue);
+}
+
+.matchup-games {
+    color: var(--text-muted);
+}
+
+.matchup-winrate {
+    font-weight: 600;
+}
+
+.matchup-winrate.positive {
+    color: var(--accent-green);
+}
+
+.matchup-winrate.negative {
+    color: var(--accent-red);
+}
+
+/* ============================================
+   ABILITY ICON
+   ============================================ */
+.ability-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.ability-icon-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.ability-icon .ability-letter {
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+/* ============================================
+   RUNE PAGES (grouped by page)
+   ============================================ */
+.rune-pages-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.rune-page {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 10px 12px;
+}
+
+.rune-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 12px;
+}
+
+.rune-page-usage {
+    color: var(--text-muted);
+}
+
+.rune-page-winrate {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.rune-page-winrate.positive {
+    color: var(--accent-green);
+}
+
+.rune-page-winrate.negative {
+    color: var(--accent-red);
+}
+
+.rune-page-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    padding: 4px 0;
+}
+
+.rune-page-row.primary-tree .game-asset.rune {
+    width: 28px;
+    height: 28px;
+}
+
+.rune-page-row.secondary-tree,
+.rune-page-row.shards {
+    opacity: 0.85;
+}
+
+@media (max-width: 480px) {
+    .rune-page-row.primary-tree .game-asset.rune {
+        width: 24px;
+        height: 24px;
+    }
+
+    .rune-page-row {
+        gap: 4px;
+    }
+
+    .rune-page {
+        padding: 8px 10px;
+    }
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+    .stat-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .skill-order-grid-row {
+        grid-template-columns: 28px repeat(13, 1fr);
+        gap: 1px;
+    }
+
+    .skill-order-grid-cell {
+        height: 24px;
+    }
+
+    .skill-square {
+        height: 24px;
+        font-size: 9px;
+    }
+
+    .skill-level-number {
+        font-size: 9px;
+    }
+
+    .ability-icon-cell .champion-asset {
+        width: 24px;
+        height: 24px;
+    }
+
+    .rune-grid,
+    .spell-grid,
+    .matchup-grid {
+        gap: 4px;
+    }
+
+    .rune-item,
+    .spell-item,
+    .matchup-item {
+        font-size: 11px;
+        padding: 3px 8px;
+    }
+
+    .core-items-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stat-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+    }
+
+    .stat-value {
+        font-size: 16px;
+    }
+
+    .champion-detail {
+        padding: 12px 14px;
+    }
+
+    .champion-detail-header {
+        flex-wrap: wrap;
+    }
+
+    .champion-detail-title h3 {
+        font-size: 17px;
+    }
+
+    .skill-order-grid-row {
+        grid-template-columns: 20px repeat(13, 1fr);
+        gap: 1px;
+    }
+
+    .skill-order-grid-cell {
+        height: 16px;
+    }
+
+    .skill-square {
+        height: 16px;
+    }
+
+    .ability-label {
+        font-size: 8px;
+    }
+
+    .skill-order-grid-wrapper {
+        padding: 8px;
+        overflow-x: auto;
+    }
+}

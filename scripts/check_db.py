@@ -1,193 +1,68 @@
-# scripts/check_db.py
-"""
-Simple script to verify the database is working properly.
-Prints the most recent game for a specific player.
-"""
+# check_db.py
+import sqlite3
+import json
 
-import sys
-import os
-from datetime import datetime
-
-# Add project root to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from src.database.db_manager import DatabaseManager
-from src.models import SortBy
-
-
-def get_player_puuid(db, player_name: str, tag_line: str) -> str:
-    """Find a player's PUUID by their name and tag."""
-    players = db.get_all_players()
-    for player in players:
-        if player.game_name.lower() == player_name.lower() and player.tag_line.lower() == tag_line.lower():
-            return player.puuid
-    return None
-
-
-def print_recent_match(db, puuid: str, limit: int = 1):
-    """Print the most recent match for a player."""
-    matches = db.get_player_matches(puuid, limit=limit)
-    
-    if not matches:
-        print("❌ No matches found for this player.")
-        return
-    
-    match = matches[0]
-    
-    print("\n" + "=" * 60)
-    print("📊 MOST RECENT MATCH")
+def check_database():
     print("=" * 60)
-    
-    # Convert timestamp to readable date
-    if match.game_creation:
-        match_date = datetime.fromtimestamp(match.game_creation / 1000)
-        print(f"📅 Date: {match_date.strftime('%Y-%m-%d %H:%M:%S')}")
-    else:
-        print(f"📅 Date: Unknown")
-    
-    print(f"🏷️  Match ID: {match.match_id}")
-    print(f"🏆 Champion ID: {match.champion_id}")
-    print(f"📌 Role: {match.role}")
-    print(f"📊 Result: {'✅ Win' if match.win else '❌ Loss'}")
-    
-    print(f"\n📈 KDA: {match.kills}/{match.deaths}/{match.assists}")
-    print(f"⚔️  CS: {match.cs}")
-    print(f"💰 Gold Earned: {match.gold_earned:,}")
-    print(f"💥 Total Damage: {match.total_damage:,}")
-    print(f"👁️  Vision Score: {match.vision_score}")
-    print(f"⏱️  Game Duration: {match.game_duration // 60}m {match.game_duration % 60}s")
-    
-    print(f"\n🛠️  Items: {match.items if match.items else 'None'}")
-    print(f"🔮 Runes: {match.runes[:5] if match.runes else 'None'}...")
-    print(f"⚡ Summoner Spells: D={match.summoner_spell_d}, F={match.summoner_spell_f}")
-    
-    if match.patch:
-        print(f"📦 Patch: {match.patch}")
-    
-    if match.skill_order:
-        print(f"📖 Skill Order: {match.skill_order}")
-    
+    print("🔍 Checking database for item_purchases")
     print("=" * 60)
-    print(f"✅ Match found! (Total matches: {len(matches)})")
-
-
-def print_match_summary(db, puuid: str, limit: int = 5):
-    """Print a summary of recent matches."""
-    matches = db.get_player_matches(puuid, limit=limit)
-    
-    if not matches:
-        print("❌ No matches found for this player.")
-        return
-    
-    print("\n" + "=" * 60)
-    print(f"📊 RECENT {len(matches)} MATCHES")
-    print("=" * 60)
-    
-    for i, match in enumerate(matches, 1):
-        # Convert timestamp to readable date
-        if match.game_creation:
-            match_date = datetime.fromtimestamp(match.game_creation / 1000)
-            date_str = match_date.strftime('%Y-%m-%d %H:%M')
-        else:
-            date_str = "Unknown"
-        
-        result = "✅" if match.win else "❌"
-        
-        print(f"\n{i}. {date_str} | {result} | Champion {match.champion_id} | {match.kills}/{match.deaths}/{match.assists} | CS: {match.cs}")
-        print(f"   Items: {match.items if match.items else 'None'}")
-    
-    print("=" * 60)
-
-
-def main():
-    """Main function to test database."""
-    print("=" * 60)
-    print("🔍 DATABASE VERIFICATION")
-    print("=" * 60)
-    
-    # Default player to check (change these)
-    PLAYER_NAME = "kiin"
-    TAG_LINE = "KR1"
-    
-    # Allow command line overrides
-    if len(sys.argv) >= 3:
-        PLAYER_NAME = sys.argv[1]
-        TAG_LINE = sys.argv[2]
-    
-    print(f"\n📌 Checking database for: {PLAYER_NAME}#{TAG_LINE}")
-    
-    # Connect to database
-    db = DatabaseManager()
     
     try:
-        # Check if players exist
-        all_players = db.get_all_players()
-        print(f"\n👥 Total players in database: {len(all_players)}")
+        conn = sqlite3.connect("league_data.db")
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
         
-        if not all_players:
-            print("❌ No players found in database. Please run main.py first:")
-            print("   python -m src.main 'Hide on bush' 'KR1'")
+        # Check if matches table exists
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='matches'")
+        if not cursor.fetchone():
+            print("❌ Matches table not found!")
             return
         
-        print("\n📋 Players in database:")
-        for p in all_players:
-            print(f"   • {p.game_name}#{p.tag_line} ({p.team}) - {p.region}")
+        # Check columns in matches table
+        cursor.execute("PRAGMA table_info(matches)")
+        columns = [col[1] for col in cursor.fetchall()]
+        print(f"📋 Columns in matches table: {columns}")
         
-        # Find the player
-        puuid = get_player_puuid(db, PLAYER_NAME, TAG_LINE)
-        
-        if not puuid:
-            print(f"\n❌ Player {PLAYER_NAME}#{TAG_LINE} not found in database.")
-            print("Available players:")
-            for p in all_players:
-                print(f"   • {p.game_name}#{p.tag_line}")
+        if 'item_purchases' not in columns:
+            print("❌ No 'item_purchases' column found! Need to add it.")
             return
         
-        print(f"\n✅ Found PUUID: {puuid[:16]}...")
+        # Check a few matches
+        cursor.execute("SELECT match_id, item_purchases FROM matches LIMIT 5")
+        rows = cursor.fetchall()
         
-        # Check match count
-        matches = db.get_player_matches(puuid, limit=100)
-        print(f"\n📊 Total matches for {PLAYER_NAME}: {len(matches)}")
+        print(f"\n📊 Found {len(rows)} matches:")
+        for row in rows:
+            print(f"\n🏷️  Match: {row['match_id']}")
+            print(f"   item_purchases: {row['item_purchases']}")
+            
+            if row['item_purchases']:
+                try:
+                    data = json.loads(row['item_purchases'])
+                    print(f"   ✅ Parsed successfully: {len(data)} items")
+                    if data:
+                        print(f"   First purchase: {data[0]}")
+                except json.JSONDecodeError as e:
+                    print(f"   ❌ JSON error: {e}")
+            else:
+                print("   ⚠️  No item_purchases data (NULL or empty)")
         
-        if not matches:
-            print("❌ No matches found. Please run main.py to fetch data:")
-            print(f"   python -m src.main '{PLAYER_NAME}' '{TAG_LINE}'")
-            return
-        
-        # Print most recent match
-        print_recent_match(db, puuid, limit=1)
-        
-        # Print recent matches summary
-        print_match_summary(db, puuid, limit=5)
-        
-        # Print some database statistics
-        print("\n" + "=" * 60)
-        print("📊 DATABASE STATISTICS")
-        print("=" * 60)
-        
-        # Count total matches
-        db.cursor.execute("SELECT COUNT(*) as count FROM matches")
-        total_matches = db.cursor.fetchone()["count"]
-        print(f"📊 Total matches in database: {total_matches}")
-        
-        # Get patch distribution
-        db.cursor.execute("""
-            SELECT patch, COUNT(*) as count 
-            FROM matches 
-            WHERE patch IS NOT NULL 
-            GROUP BY patch 
-            ORDER BY count DESC
+        # Count how many matches have item_purchases data
+        cursor.execute("""
+            SELECT 
+                COUNT(*) as total,
+                SUM(CASE WHEN item_purchases IS NOT NULL AND item_purchases != '' THEN 1 ELSE 0 END) as has_data
+            FROM matches
         """)
-        patches = db.cursor.fetchall()
-        if patches:
-            print("\n📦 Patch distribution:")
-            for p in patches[:5]:
-                print(f"   • Patch {p['patch']}: {p['count']} matches")
+        stats = cursor.fetchone()
+        print(f"\n📊 Statistics:")
+        print(f"   Total matches: {stats['total']}")
+        print(f"   Matches with item_purchases: {stats['has_data']}")
         
+    except Exception as e:
+        print(f"❌ Error: {e}")
     finally:
-        db.close()
-        print("\n✅ Database connection closed")
-
+        conn.close()
 
 if __name__ == "__main__":
-    main()
+    check_database()
