@@ -41,13 +41,13 @@ Aggregates each pro's recent ranked matches — champion pools, rune pages, item
 ## Architecture
 
 Riot API, Data Dragon, CommunityDragon
-V
+>
 RiotAPIClient: match fetching, timeline parsing, Data dragon
-V
+>
 DatabaseManager: SQLite
-V
+>
 FastAPI
-V
+>
 React frontend
 
 
@@ -94,6 +94,7 @@ raw.communitydragon.org/latest/game/assets/perks/statmods/.
 ## Setup
 
 ### Prerequistites
+```bash
 Python 3.10+
 Node.js 18+
 Riot API key
@@ -115,8 +116,10 @@ python -m src.main
 
 # Start the API
 uvicorn src.api.app:app --reload
+```
 
 ### FRONTEND
+```bash
 cd frontend
 
 # Install dependencies
@@ -128,12 +131,14 @@ cp .env.example .env
 
 # Start the dev server
 npm start
-
+```
 ### Adding a player
 To add a player, look at the format of the json, and run python populate_puuids.py to generate their puuid
 
 ### Testing
+```bash
 python -m pytest tests/ -v -s
+```
 This test is for the Riot API connection
 
 ### Limitations
