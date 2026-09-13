@@ -388,6 +388,10 @@ def get_champion_details(
 
         # ============================================
         # 4. MATCHUPS
+        #
+        # Scoped to this specific player's matchup rows. Without the
+        # mu.puuid condition, a game where two tracked pros faced each
+        # other would surface the opponent's matchup row on this page.
         # ============================================
         matchup_query = """
             SELECT 
@@ -396,9 +400,7 @@ def get_champion_details(
                 SUM(mu.win) as wins,
                 ROUND(AVG(mu.win) * 100, 1) as win_rate
             FROM matchups mu
-            WHERE mu.ally_champion_id = ? AND EXISTS (
-                SELECT 1 FROM matches m WHERE m.match_id = mu.match_id AND m.puuid = ?
-            )
+            WHERE mu.ally_champion_id = ? AND mu.puuid = ?
         """
         matchup_params = [champion_id, puuid]
 

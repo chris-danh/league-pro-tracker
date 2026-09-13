@@ -581,7 +581,6 @@ const ChampionDetail = ({
                     <div className="matchup-grid">
                         {matchups
                             .filter(m => !selectedMatchup || m.enemy_champion_id === selectedMatchup)
-                            .slice(0, 15)
                             .map((matchup) => (
                                 <div
                                     key={matchup.enemy_champion_id}
