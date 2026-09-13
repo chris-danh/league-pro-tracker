@@ -1,10 +1,10 @@
 // frontend/src/components/ChampionAsset.jsx
 import React, { useState, useEffect } from 'react';
 import './Assets.css';
-import { getChampionAbilityMap } from '../api/client';
+import { getChampionAbilityMap, getLatestDDragonVersion } from '../api/client';
 
-const ChampionAsset = ({ 
-    championId, 
+const ChampionAsset = ({
+    championId,
     type = 'icon',
     ability = null,
     size = 'small',
@@ -25,34 +25,29 @@ const ChampionAsset = ({
             }
 
             try {
-                const version = '16.16.1';
                 let url = null;
                 let name = null;
 
-                // For champion icon
                 if (type === 'icon') {
                     if (championMap) {
                         const info = championMap.get(championId);
                         if (info && info.key) {
+                            const version = await getLatestDDragonVersion();
                             url = `https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${info.key}.png`;
                             name = info.name;
                         }
                     }
-                }
-                // For ability icon
-                else if (type === 'ability' && ability) {
+                } else if (type === 'ability' && ability) {
                     const map = await getChampionAbilityMap();
                     const abilityIndexMap = { 'Q': 0, 'W': 1, 'E': 2, 'R': 3 };
                     const index = abilityIndexMap[ability];
-                    
+
                     if (index !== undefined && map[championId]?.spells?.[index]) {
                         const spell = map[championId].spells[index];
                         url = spell.image;
                         name = map[championId].name;
                     }
-                }
-                // For splash art
-                else if (type === 'splash') {
+                } else if (type === 'splash') {
                     if (championMap) {
                         const info = championMap.get(championId);
                         if (info && info.key) {
@@ -119,9 +114,9 @@ const ChampionAsset = ({
 
     return (
         <div className={`champion-asset ${sizeClass} ${className}`}>
-            <img 
-                src={imageUrl} 
-                alt={championName || `Champion ${championId}`} 
+            <img
+                src={imageUrl}
+                alt={championName || `Champion ${championId}`}
                 loading="lazy"
                 onError={() => setError(true)}
             />

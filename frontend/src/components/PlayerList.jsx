@@ -2,7 +2,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import './PlayerList.css';
-import ChampionAsset from './ChampionAsset';
 import PlayerAvatar from './PlayerAvatar';
 
 const REGION_NAMES = {
@@ -48,15 +47,23 @@ const PlayerList = ({ groupedPlayers, loading, getChampionName, onSelectPlayer }
                         {players.map((player) => (
                             <Link
                                 key={player.puuid}
-                                to={`/player/${player.name}`}
+                                to={`/player/${encodeURIComponent(player.display_name || player.name)}`}
                                 className="player-card"
                                 onClick={() => onSelectPlayer && onSelectPlayer(player)}
                             >
                                 <PlayerAvatar player={player} size="medium" />
                                 <div className="player-info">
-                                    <div className="player-name">{player.name}</div>
-                                    <div className="player-team">{player.team || 'Free Agent'}</div>
-                                    <div className="player-tag">{player.tag}</div>
+                                    <div className="player-name">
+                                        {player.team && (
+                                            <span className="player-team-badge">{player.team}</span>
+                                        )}
+                                        <span className="player-display-name">
+                                            {player.display_name || player.name}
+                                        </span>
+                                    </div>
+                                    <div className="player-ign">
+                                        {player.name} #{player.tag}
+                                    </div>
                                 </div>
                             </Link>
                         ))}

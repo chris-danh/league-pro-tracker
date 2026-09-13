@@ -14,29 +14,33 @@
 }
 
 .champion-list::-webkit-scrollbar-thumb {
-    background: #2a3a4a;
+    background: var(--border-color);
     border-radius: 2px;
 }
 
+/* ============================================
+   CHAMPION BUTTON
+   ============================================ */
 .champion-btn {
     background: transparent;
     border: none;
     border-radius: 6px;
     padding: 8px 12px;
-    color: #c8d0d8;
+    color: var(--text-secondary);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background 0.2s, color 0.2s;
     width: 100%;
     text-align: left;
+    font-family: inherit;
 }
 
 .champion-btn:hover {
-    background: #1a2a3a;
+    background: var(--bg-card);
 }
 
 .champion-btn.active {
-    background: #1a3a5a;
-    color: #f0e6d2;
+    background: var(--bg-active);
+    color: var(--text-primary);
 }
 
 .champion-item {
@@ -49,12 +53,12 @@
     flex: 1;
     font-weight: 500;
     font-size: 14px;
-    color: #f0e6d2;
+    color: var(--text-primary);
 }
 
 .champion-games {
     font-size: 12px;
-    color: #8899aa;
+    color: var(--text-muted);
     min-width: 50px;
     text-align: right;
 }
@@ -67,28 +71,30 @@
 }
 
 .champion-winrate.positive {
-    color: #66dd88;
+    color: var(--accent-green);
 }
 
 .champion-winrate.negative {
-    color: #ee6666;
+    color: var(--accent-red);
 }
 
+/* ============================================
+   LOADING / EMPTY
+   ============================================ */
 .loading-text {
     padding: 20px;
     text-align: center;
-    color: #667788;
+    color: var(--text-muted);
 }
 
 .empty-state {
     padding: 20px;
     text-align: center;
-    color: #667788;
+    color: var(--text-muted);
 }
 
 .empty-state .hint {
     font-size: 12px;
-    color: #556677;
+    color: var(--text-dark);
     margin-top: 4px;
 }
-

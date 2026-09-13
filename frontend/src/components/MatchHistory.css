@@ -13,7 +13,7 @@
 
 .match-card {
     display: grid;
-    grid-template-columns: 36px 1fr 1fr 1fr 1.5fr 28px;
+    grid-template-columns: 36px 110px 1fr 1fr 1fr 1.5fr 28px;
     align-items: center;
     padding: 10px 14px;
     border-radius: 6px;
@@ -51,7 +51,26 @@
 .match-champion-wrapper {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
+}
+
+.matchup-vs {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 0 2px;
+}
+
+/* Loadout: spells + keystone + secondary tree in the collapsed card */
+.match-loadout {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.match-loadout .game-asset {
+    width: 22px;
+    height: 22px;
 }
 
 .match-kda {
@@ -94,6 +113,47 @@
     margin-bottom: 10px;
 }
 
+/* ============================================
+   MATCH DETAIL TABS
+   ============================================ */
+.match-tabs {
+    display: flex;
+    gap: 2px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 12px;
+}
+
+.match-tab {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-family: inherit;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: -1px;
+}
+
+.match-tab:hover {
+    color: var(--text-primary);
+    background: var(--bg-hover);
+}
+
+.match-tab.active {
+    color: var(--accent-blue);
+    border-bottom-color: var(--accent-blue);
+    font-weight: 500;
+}
+
+.timeline-empty {
+    color: var(--text-muted);
+    font-size: 13px;
+    padding: 12px 0;
+    text-align: center;
+}
+
 .build-section {
     margin-bottom: 12px;
 }
@@ -118,15 +178,35 @@
     gap: 4px;
 }
 
-.participants-grid {
+/* Summoner spells row in the expanded build section */
+.build-spells {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* ============================================
+   PARTICIPANTS (blue team left, red team right)
+   ============================================ */
+.participants-teams {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 4px 16px;
+    gap: 16px;
+}
+
+.participants-column {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .participant-item {
     display: grid;
-    grid-template-columns: 80px 70px 1fr;
+    grid-template-columns: 32px 60px 96px 1fr;
     align-items: center;
     padding: 4px 8px;
     border-radius: 4px;
@@ -146,12 +226,225 @@
     color: var(--text-secondary);
 }
 
+.participant-loadout {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.participant-loadout .game-asset {
+    width: 20px;
+    height: 20px;
+}
+
 .participant-items {
     display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.participant-inventory {
+    display: grid;
+    grid-template-columns: repeat(3, 24px);
+    grid-template-rows: repeat(2, 24px);
     gap: 2px;
 }
 
-/* Load More Button */
+.participant-utility {
+    display: grid;
+    grid-template-columns: 24px;
+    grid-template-rows: repeat(2, 24px);
+    gap: 2px;
+    padding-left: 6px;
+    border-left: 1px solid var(--border-color);
+}
+
+.participant-inventory .game-asset,
+.participant-utility .game-asset {
+    width: 24px;
+    height: 24px;
+}
+
+.empty-item-slot {
+    border: 1px dashed var(--border-color);
+    background: transparent;
+    opacity: 0.35;
+}
+
+.role-bound-slot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ============================================
+   SKILL ORDER TIMELINE
+   ============================================ */
+.skill-order-timeline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 6px;
+}
+
+.skill-order-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.skill-order-level {
+    font-size: 9px;
+    color: var(--text-muted);
+    font-family: monospace;
+}
+
+.skill-order-ability {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #ffffff;
+    background: var(--bg-hover);
+    border: 1px solid var(--border-color);
+}
+
+.skill-order-ability.ability-Q {
+    background: rgba(255, 80, 80, 0.6);
+    border-color: rgba(255, 80, 80, 0.8);
+}
+
+.skill-order-ability.ability-W {
+    background: rgba(80, 160, 255, 0.6);
+    border-color: rgba(80, 160, 255, 0.8);
+}
+
+.skill-order-ability.ability-E {
+    background: rgba(80, 255, 150, 0.6);
+    border-color: rgba(80, 255, 150, 0.8);
+}
+
+.skill-order-ability.ability-R {
+    background: rgba(255, 200, 50, 0.6);
+    border-color: rgba(255, 200, 50, 0.8);
+}
+
+/* ============================================
+   SKILL ORDER PRIORITY SUMMARY
+   ============================================ */
+.skill-order-priority {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 6px 10px;
+    background: var(--bg-secondary);
+    border-radius: 4px;
+    width: fit-content;
+}
+
+.priority-ability-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.priority-ability-letter {
+    font-size: 14px;
+    font-weight: 700;
+    font-family: monospace;
+}
+
+.priority-ability-letter.ability-Q {
+    color: #ff6b6b;
+}
+
+.priority-ability-letter.ability-W {
+    color: #64b4ff;
+}
+
+.priority-ability-letter.ability-E {
+    color: #64ff96;
+}
+
+.priority-separator {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin: 0 4px;
+}
+
+/* ============================================
+   ITEM PURCHASE TIMELINE
+   ============================================ */
+.item-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-top: 6px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.timeline-entry {
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 4px;
+    border-radius: 3px;
+    font-size: 12px;
+}
+
+.timeline-entry.sold {
+    opacity: 0.55;
+}
+
+.timeline-entry.sold .timeline-item {
+    position: relative;
+}
+
+.timeline-entry.sold .timeline-item .game-asset {
+    filter: grayscale(0.6);
+}
+
+.timeline-time {
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-align: right;
+}
+
+.timeline-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.timeline-sold-marker {
+    font-size: 10px;
+    color: var(--accent-red);
+    font-style: italic;
+}
+
+.timeline-core-badge {
+    font-size: 10px;
+    color: var(--accent-blue);
+    background: rgba(136, 204, 255, 0.1);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+}
+
+/* ============================================
+   LOAD MORE
+   ============================================ */
 .load-more-btn {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
@@ -183,13 +476,20 @@
     color: var(--text-muted);
 }
 
-/* Responsive */
+/* ============================================
+   RESPONSIVE
+   ============================================ */
 @media (max-width: 768px) {
     .match-card {
-        grid-template-columns: 28px 0.8fr 1fr 1fr 1fr 20px;
+        grid-template-columns: 24px 80px 1fr 1fr 1fr 20px;
         padding: 8px 10px;
         font-size: 12px;
         gap: 4px;
+    }
+
+    .match-loadout .game-asset {
+        width: 18px;
+        height: 18px;
     }
 
     .match-items {
@@ -200,20 +500,25 @@
         display: none;
     }
 
-    .participants-grid {
+    .participants-teams {
         grid-template-columns: 1fr;
-        gap: 4px;
+        gap: 10px;
     }
 
     .participant-item {
-        grid-template-columns: 60px 50px 1fr;
-        font-size: 11px;
+        grid-template-columns: 24px 44px 80px 1fr;
+        font-size: 10px;
+    }
+
+    .participant-loadout .game-asset {
+        width: 16px;
+        height: 16px;
     }
 }
 
 @media (max-width: 480px) {
     .match-card {
-        grid-template-columns: 24px 0.7fr 1fr 0.8fr 20px;
+        grid-template-columns: 20px 68px 1fr 1fr 18px;
         font-size: 11px;
         padding: 6px 8px;
         gap: 3px;
@@ -227,10 +532,6 @@
         font-size: 12px;
     }
 
-    .match-champion-wrapper {
-        font-size: 12px;
-    }
-
     .match-kda {
         font-size: 12px;
     }
@@ -240,7 +541,27 @@
     }
 
     .participant-item {
-        grid-template-columns: 50px 40px 1fr;
+        grid-template-columns: 20px 40px 68px 1fr;
+        font-size: 9px;
+    }
+
+    .participant-loadout .game-asset {
+        width: 14px;
+        height: 14px;
+    }
+
+    .skill-order-ability {
+        width: 18px;
+        height: 18px;
+        font-size: 9px;
+    }
+
+    .timeline-entry {
+        grid-template-columns: 38px 1fr auto;
+        gap: 6px;
+    }
+
+    .timeline-time {
         font-size: 10px;
     }
 }

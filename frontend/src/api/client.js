@@ -6,9 +6,27 @@ const DD_BASE = 'https://ddragon.leagueoflegends.com';
 
 const api = axios.create({
     baseURL: API_BASE,
-    timeout: 30000,
+    timeout: 120000,
     headers: { 'Content-Type': 'application/json' },
 });
+
+// ============================================
+// DATA DRAGON VERSION (cached, shared)
+// ============================================
+
+// All Data Dragon lookups use the same patch. Fetching /api/versions.json
+// once and caching the promise means every consumer resolves to the same
+// version string without a redundant network call.
+let ddragonVersionPromise = null;
+
+export const getLatestDDragonVersion = () => {
+    if (!ddragonVersionPromise) {
+        ddragonVersionPromise = axios
+            .get(`${DD_BASE}/api/versions.json`)
+            .then(res => res.data[0]);
+    }
+    return ddragonVersionPromise;
+};
 
 // ============================================
 // API FUNCTIONS
@@ -20,18 +38,6 @@ export const getPlayers = async () => {
         return response.data;
     } catch (error) {
         console.error('Error fetching players:', error);
-        throw error;
-    }
-};
-
-export const getPracticeStats = async (puuid, sortBy = 'games', minGames = 3, limit = 10) => {
-    try {
-        const response = await api.get(`/player/${puuid}/practice`, {
-            params: { sort_by: sortBy, min_games: minGames, limit: limit },
-        });
-        return response.data;
-    } catch (error) {
-        console.error('Error fetching practice stats:', error);
         throw error;
     }
 };
@@ -56,16 +62,6 @@ export const refreshPlayer = async (gameName, tagLine, matchCount = 20, includeT
     }
 };
 
-export const checkHealth = async () => {
-    try {
-        const response = await api.get('/');
-        return response.data;
-    } catch (error) {
-        console.error('API health check failed:', error);
-        throw error;
-    }
-};
-
 // ============================================
 // DATA DRAGON - CHAMPIONS
 // ============================================
@@ -79,9 +75,10 @@ export const getChampionMap = async () => {
     }
 
     try {
-        const versionResponse = await axios.get(`${DD_BASE}/api/versions.json`);
-        const latestVersion = versionResponse.data[0];
-        const championResponse = await axios.get(`${DD_BASE}/cdn/${latestVersion}/data/en_US/champion.json`);
+        const latestVersion = await getLatestDDragonVersion();
+        const championResponse = await axios.get(
+            `${DD_BASE}/cdn/${latestVersion}/data/en_US/champion.json`
+        );
         const championData = championResponse.data.data;
 
         const championMap = new Map();
@@ -135,6 +132,22 @@ export const getMatchHistory = async (puuid, page = 1, pageSize = 20, patch = nu
     }
 };
 
+export const getRegionChampions = async (region, minGames = 2, role = null, limit = 50) => {
+    try {
+        const response = await api.get(`/region/${region}/champions`, {
+            params: {
+                min_games: minGames,
+                role,
+                limit,
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching region champions:', error);
+        throw error;
+    }
+};
+
 // ============================================
 // DATA DRAGON - ITEMS
 // ============================================
@@ -150,9 +163,10 @@ export const getItemMap = async () => {
     itemMapLoading = true;
     itemMapPromise = (async () => {
         try {
-            const versionResponse = await axios.get(`${DD_BASE}/api/versions.json`);
-            const latestVersion = versionResponse.data[0];
-            const itemResponse = await axios.get(`${DD_BASE}/cdn/${latestVersion}/data/en_US/item.json`);
+            const latestVersion = await getLatestDDragonVersion();
+            const itemResponse = await axios.get(
+                `${DD_BASE}/cdn/${latestVersion}/data/en_US/item.json`
+            );
             const itemData = itemResponse.data.data;
 
             itemMap = new Map();
@@ -204,9 +218,10 @@ export const getRuneMap = async () => {
     runeMapLoading = true;
     runeMapPromise = (async () => {
         try {
-            const versionResponse = await axios.get(`${DD_BASE}/api/versions.json`);
-            const latestVersion = versionResponse.data[0];
-            const runeResponse = await axios.get(`${DD_BASE}/cdn/${latestVersion}/data/en_US/runesReforged.json`);
+            const latestVersion = await getLatestDDragonVersion();
+            const runeResponse = await axios.get(
+                `${DD_BASE}/cdn/${latestVersion}/data/en_US/runesReforged.json`
+            );
             const runeData = runeResponse.data;
 
             runeMap = new Map();
@@ -244,7 +259,7 @@ const CDRAGON_BASE = 'https://raw.communitydragon.org/latest/game/assets/perks/s
 // things in different slots (e.g. 5008 in offense vs flex).
 const STAT_SHARD_MAP = {
     // ── Offense slot ─────────────────────────────
-    'shard_offense_5005': { name: 'Attack Speed',  file: 'statmodsattackspeedicon' },
+    'shard_offense_5005': { name: 'Attack Speed',    file: 'statmodsattackspeedicon' },
     'shard_offense_5008': { name: 'Adaptive Force',  file: 'statmodsadaptiveforceicon' },
     'shard_offense_5007': { name: 'Ability Haste',   file: 'statmodscdrscalingicon' },
 
@@ -275,20 +290,44 @@ export const getStatShardMap = () => {
 };
 
 // ============================================
-// RUNE LOOKUP (combines tree runes + shards)
+// DATA DRAGON - RUNE TREE STYLES (8000-8400)
+// ============================================
+
+// Rune tree/style IDs → icon URLs. These are separate from individual rune
+// IDs and must be looked up on their own path in Data Dragon. Declared here
+// (before getRuneDetails) so it's initialized when that function runs.
+const RUNE_STYLE_MAP = new Map([
+    [8000, { name: 'Precision',   image: 'https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7201_Precision.png' }],
+    [8100, { name: 'Domination',  image: 'https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7200_Domination.png' }],
+    [8200, { name: 'Sorcery',     image: 'https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7202_Sorcery.png' }],
+    [8300, { name: 'Inspiration', image: 'https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7203_Whimsy.png' }],
+    [8400, { name: 'Resolve',     image: 'https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/7204_Resolve.png' }],
+]);
+
+// ============================================
+// RUNE LOOKUP (combines tree runes + shards + styles)
 // ============================================
 
 export const getRuneDetails = async (runeId, slot = null) => {
-    // If a slot is provided, try the slot-aware shard lookup first.
+    // Slot-aware shard lookup first.
     if (slot) {
         const key = `${slot}_${runeId}`;
         const shard = getStatShardMap().get(key);
         if (shard) return shard;
     }
 
-    // Fall back to main tree runes from Data Dragon.
+    // Rune tree styles (8000-8400) are separate from individual runes.
+    const style = RUNE_STYLE_MAP.get(runeId);
+    if (style) return style;
+
+    // Fall back to the main rune map from Data Dragon.
     const map = await getRuneMap();
     return map.get(runeId) || null;
+};
+
+export const getRuneName = (runeId) => {
+    if (!runeMap) return null;
+    return runeMap.get(runeId)?.name || null;
 };
 
 export const getRuneImageUrl = async (runeId, slot = null) => {
@@ -322,9 +361,10 @@ export const getChampionAbilityMap = async () => {
     abilityMapLoading = true;
     abilityMapPromise = (async () => {
         try {
-            const versionRes = await axios.get(`${DD_BASE}/api/versions.json`);
-            const latestVersion = versionRes.data[0];
-            const champListRes = await axios.get(`${DD_BASE}/cdn/${latestVersion}/data/en_US/champion.json`);
+            const latestVersion = await getLatestDDragonVersion();
+            const champListRes = await axios.get(
+                `${DD_BASE}/cdn/${latestVersion}/data/en_US/champion.json`
+            );
             const champList = champListRes.data.data;
             const abilityMap = {};
             const championKeys = Object.keys(champList);
@@ -388,9 +428,10 @@ export const getSummonerSpellMap = async () => {
     summonerSpellMapLoading = true;
     summonerSpellMapPromise = (async () => {
         try {
-            const versionRes = await axios.get(`${DD_BASE}/api/versions.json`);
-            const latestVersion = versionRes.data[0];
-            const spellRes = await axios.get(`${DD_BASE}/cdn/${latestVersion}/data/en_US/summoner.json`);
+            const latestVersion = await getLatestDDragonVersion();
+            const spellRes = await axios.get(
+                `${DD_BASE}/cdn/${latestVersion}/data/en_US/summoner.json`
+            );
             const spellData = spellRes.data.data;
 
             summonerSpellMap = new Map();

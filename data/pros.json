@@ -3,71 +3,49 @@
         {
             "IGN": "TOPKING",
             "tagline": "asd",
-            "player": "DK Siwoo",
-            "puuid": "pOD1kkxjZWwJoz09LL_1yMSOf1bGANu2ULZZ264XmsEvL2wFeR-_Ii0NaJap8qpecx4-hKNlQetX0A",
-            "role": "TOP"
-        },
-        {
-            "IGN": "frog",
-            "tagline": "krx",
-            "player": "KRX Frog",
-            "puuid": "_nIfWt4OhiFKo4lqtHVVgDqOal-eeCmVrDQbXwr9U94yoo2tfAESh_cAZJyhqx6lN8K7O-efMJcPnQ",
-            "role": "TOP"
-        },
-        {
-            "IGN": "Casting",
-            "tagline": "KR11",
-            "player": "BRO Casting",
-            "puuid": "T9h5ce3RrQ85aeVlPktd4h9d-YzCZqgEi0ZfPr_J8Z7Yy8FbL4H8Jg92Cc_S0QJeyREF1yOMT97_Ng",
+            "player": "Siwoo",
+            "team": "DK",
+            "puuid": "Jp8mM8S61HuRaJgTXemsg_4lU2wD0vPNkO3hTEMq3BeAiWD-E-huxZIG5s55K52ZN-kcZtpfC5381Q",
             "role": "TOP"
         },
         {
             "IGN": "Athene",
             "tagline": "lll",
-            "player": "HLE Zeus",
-            "puuid": "A06XMUXSslR3_7of3PGW5Tb2KWkmDeY44LgI3M7-9f5ck3MAEJ_ITI7JcrufOZBu6mcJsyxjxMTkHg",
+            "player": "Zeus",
+            "team": "HLE",
+            "puuid": "uwvqQgEAbXqgROTgBnlcYuTMHv64luFAzggDAVHuLW9MJlKLRCXbjpJdJ_mFxErc2cZgmZ7P-Oagog",
             "role": "TOP"
         },
         {
             "IGN": "songman",
             "tagline": "KR11",
-            "player": "BFX Clear",
-            "puuid": "5BQgiWtSQkyzt9G6ylrW_cXf7WQ7QbBSdHPYeLiEnekJY0YsFfKPkoGASvX607tS1_vPX5kR_rZl7Q",
+            "player": "Clear",
+            "team": "BFX",
+            "puuid": "D3UM-7ytKPsx7cxNtGeix3ACcqQuQBLPCKHFoft4LIw4kzdtFqbBxTqgrLnKGS3COE1pg7l0R_q4sg",
             "role": "TOP"
         },
         {
             "IGN": "어리고싶다",
             "tagline": "KR1",
-            "player": "T1 Doran",
-            "puuid": "0wOwbK5yG6_8mLAuS2R4oQHvpyPUJOR9I9cTkhScd8KiNnY8Y5McK7ZGghCpqs_LisDa93JEhAjfJA",
+            "player": "Doran",
+            "team": "T1",
+            "puuid": "z5ZwjJ_fBTvontaBuRpaKmI5jyvbH3LGReXgr1JhoYV6DYwHTgIkix9JMOUCz9a95VcikS0g7Omnmg",
             "role": "TOP"
         },
         {
-            "IGN": "작두콩차",
-            "tagline": "꿀유자차",
-            "player": "KT PerfecT",
-            "puuid": "QinCf87HDzDqOPUUH_Ke8phm6eQ1ix8QCiQ7V_UezD092vWQIRbFkaGO7g_tdZwx83970p_Or3k8bQ",
-            "role": "TOP"
-        },
-        {
-            "IGN": "kingen",
-            "tagline": "KR1",
-            "player": "NS Kingen",
-            "puuid": "Vfg1GTKbhZ2T_P77JpuukgWGSYYUZy1w3kajtsXOve7Uv7NEtHjGrSBcup3019gatyhwhtv1Y74f_w",
+            "IGN": "PerfecT",
+            "tagline": "132",
+            "player": "PerfecT",
+            "team": "KT",
+            "puuid": "IqdagXSn3H2n_PBjkMfntKWvGG4vkQl8SLvfee99DwIvm_m5FqXL8W_5uwi1elHcVt5H3VSrBU-eDQ",
             "role": "TOP"
         },
         {
             "IGN": "kiin",
             "tagline": "KR1",
-            "player": "GEN Kiin",
+            "player": "Kiin",
+            "team": "GEN",
             "puuid": "GiaAzLoFQR8ngyYxi-UenFxNTMTeoQGnwqzE9hQ98dblRZbRdv7Igr2STfaHX8q7j8p4w6KBfKdXdA",
-            "role": "TOP"
-        },
-        {
-            "IGN": "따봉 람머스",
-            "tagline": "KR1",
-            "player": "DNS DuDu",
-            "puuid": "4ngnaXhhpvr0YC8qKwkhZzN3Gfeu14fOSejD5wwILtmJBadKVRzvyD-kcNnMMB0nmQmdMsb0wFlnmg",
             "role": "TOP"
         }
     ],
@@ -75,92 +53,81 @@
         {
             "IGN": "aierlanxiaozhu",
             "tagline": "01321",
-            "player": "AL Breathe",
+            "player": "Breathe",
+            "team": "AL",
             "puuid": "EaD0nFXcWBo1LG7tAl1BfCJotdBzK-ZPU3mUIpqL5-lYmCTpjekMLUCSTOWpJGaVO2Q4smb4yDLJ0g",
             "role": "TOP"
         },
         {
-            "IGN": "14小孩幻想赢对线",
-            "tagline": "4453",
-            "player": "BLG Wenbo",
-            "puuid": "jqpS_U-0FF4SzlpFXj8fbh-zCMpg5bug8OY3j4yHWxYNVKKwYq-03UlcEtn56sdaOmVJ48GshghtBg",
+            "IGN": "빈스토리",
+            "tagline": "KR1",
+            "player": "Bin",
+            "team": "BLG",
+            "puuid": "T7oKTCQkkrJc-RS61456WEOn7_pZoWyGOxZnh7KhDCnyJiYE430LqwI9iAH1uBKQrRV3W5M-bQGV5g",
             "role": "TOP"
         },
         {
             "IGN": "zdz",
             "tagline": "2001",
-            "player": "EDG Zdz",
-            "puuid": "qrOdOTAiC2wPQrMmlfgIcTMtFIG-qrAiM4_XZnh_ddnRIQFGl8Zz4BmUsOXCn2wmMwR4Xm20BSJQyg",
+            "player": "Zdz",
+            "team": "EDG",
+            "puuid": "mOlUPaSKtfg36hIgPjSgu6geIOmHj1zkdum3jSJ6ObFJCtS82D2UpZCh-zPm8O6OFGabYKAbzSAvUg",
             "role": "TOP"
         },
         {
             "IGN": "The shy",
             "tagline": "asdf",
-            "player": "iG TheShy",
+            "player": "TheShy",
+            "team": "iG",
             "puuid": "XdyPq2TN9bSocdr8wURA2LO3C2Q69ZXVxxTm1oqCk6YuBTXaubo5Ktuqn2EBEtncDwwSKw9-LAY7MQ",
-            "role": "TOP"
-        },
-        {
-            "IGN": "吸血鬼大王",
-            "tagline": "世一鬼",
-            "player": "JDG Xiaoxu",
-            "puuid": "CTYzIEgAKSOTW5maaav_E1USUwWJpCGBYCVfPtkl12Ro_6V-_CJwunMBdcoNix7BipHZDZjTbGvdbw",
             "role": "TOP"
         },
         {
             "IGN": "샤오 쑤A",
             "tagline": "KR1",
-            "player": "JDG Xiaoxu",
-            "puuid": "6GzFGf0gQ_JgC2CH82kU0CWSpnK9aBuTmk8GYaqDpxm8i3DEyBlhnh66ZV6VN7YkTyPc3jpJHXiUTA",
+            "player": "Xiaoxu",
+            "team": "JDG",
+            "puuid": "vS9JQfVbLQSmS5P8LqJ4Qzu0CBXnM73bHIKfS8T4JaUNSP0dQBWtRhBcvGid-tl4LHx5OTBovQNifg",
             "role": "TOP"
         },
         {
             "IGN": "burdol",
             "tagline": "1225",
-            "player": "LGD Burdol",
+            "player": "Burdol",
+            "team": "LGD",
             "puuid": "gCJMkTLS5gz1QUbKImJimlTfwwSz1WU3B-Mn0ysH7cRKt9Bfep-NeoIHihk-mmA_NHZGOYm7o3Ig_w",
             "role": "TOP"
         },
         {
-            "IGN": "시비걸면지상렬",
-            "tagline": "KR1",
-            "player": "LNG sheer",
-            "puuid": "3i7OmwMJgG81o3K4R0ZBRXK8KMF8Py_aJibLFaspPjeSGwZvjWn-NrD_me08PIgV42XFze0AyvaO9w",
-            "role": "TOP"
-        },
-        {
             "IGN": "어쩌라고맞짱뜰까",
-            "tagline": "HOYA",
-            "player": "NIP HOYA",
-            "puuid": "wRKjCCjVztzrUv5dZxw3iL75yJciwWuKcOuayBbGfbRuDgVAeCaVFK3ztcNq0z-dT9e9vZy4QF0Ijg",
+            "tagline": "hoya",
+            "player": "HOYA",
+            "team": "NIP",
+            "puuid": "y3Iz_YtjroKeOcIjEL6z2gHtArMlCtmcExd4ngDK2sUtv_Mm7cuvnXHahpoeBadWNIdqO1npz3g5jA",
             "role": "TOP"
         },
         {
-            "IGN": "wechoukesi",
+            "IGN": "WE choukesi",
             "tagline": "KR1",
-            "player": "WE Cube",
-            "puuid": "lIBnXjeqUKdGcr2K8loxiKbcFYs6wvwllGw-hty0AerK-43oKbJtEBJBVXb1HlkUBD0t1h6rxOHFWg",
+            "player": "Cube",
+            "team": "WE",
+            "puuid": "2T-NQ7A2Ya78fE0UXljImDSas0DdJeiaoy8OUDTp1gze0SrpODfoG4kNUCEMTUErKMP6kIcKxWP3fA",
             "role": "TOP"
         },
         {
-            "IGN": "godknows",
-            "tagline": "lqh",
-            "player": "TT Keshi",
-            "puuid": "5_n8t6nfCQ8La5qTI9jL8qcygpYcvWsy8C9K6_AylSjW6WJ9O1yalZ66fhdtI1RoTOFKvNbGKcOmgA",
+            "IGN": "leicingwaa",
+            "tagline": "2006",
+            "player": "Keshi",
+            "team": "TT",
+            "puuid": "YUIrFGL0clX9U0D-amUulUA8-lea1hB84jf2V15MU6dJMMqRyh1UKpasaHbdLFwTvk8TpP_tIrREig",
             "role": "TOP"
         },
         {
             "IGN": "Pure Imagination",
             "tagline": "ZZZZZ",
-            "player": "TES ZUIAN",
+            "player": "ZUIAN",
+            "team": "TES",
             "puuid": "cg0AwKrX5fLHjgIuX7f3QI3TN4yTuSiBpRzleCVrPBblceh7eBlfhBciBbreyUDjeKJ_pgr2ReXcDQ",
-            "role": "TOP"
-        },
-        {
-            "IGN": "eqweqwdsad",
-            "tagline": "123",
-            "player": "WBG Zika",
-            "puuid": "2Xm9csWiBEXW5WUIxYm-XPjHXyMNyRszI3z1uNi6yiMSNISu_Kd3AnxByMkK5_CtthLgDZScHtiLbA",
             "role": "TOP"
         }
     ]

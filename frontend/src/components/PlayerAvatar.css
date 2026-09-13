@@ -1,8 +1,9 @@
 /* frontend/src/components/PlayerAvatar.css */
 
+/* ============================================
+   BASE
+   ============================================ */
 .player-avatar {
-    width: 48px;
-    height: 48px;
     border-radius: 50%;
     overflow: hidden;
     flex-shrink: 0;
@@ -13,64 +14,77 @@
     justify-content: center;
 }
 
-.player-avatar-small {
+.player-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* ============================================
+   SIZE VARIANTS
+   ============================================ */
+.player-avatar.avatar-small {
     width: 32px;
     height: 32px;
-    border-radius: 50%;
-    overflow: hidden;
-    flex-shrink: 0;
-    background: var(--bg-card);
-    border: 2px solid var(--border-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
-.player-avatar-large {
+.player-avatar.avatar-medium {
+    width: 48px;
+    height: 48px;
+}
+
+.player-avatar.avatar-large {
     width: 100px;
     height: 100px;
-    border-radius: 50%;
-    overflow: hidden;
-    flex-shrink: 0;
-    background: var(--bg-card);
-    border: 3px solid var(--accent-blue);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    border-width: 3px;
+    border-color: var(--accent-blue);
 }
 
-.player-avatar img,
-.player-avatar-small img,
-.player-avatar-large img {
-    width: 100%;
-    height: 100%;
-    /* For player portraits, we want to contain the full image */
-    object-fit: contain;
-    /* object-fit: cover; ← This is what was zooming in */
+/* ============================================
+   FALLBACK (initials shown when no portrait)
+   ============================================ */
+.player-avatar.avatar-fallback {
+    border-color: var(--text-dark);
 }
 
-.player-avatar .fallback,
-.player-avatar-small .fallback,
-.player-avatar-large .fallback {
+.player-avatar .fallback-initials {
     display: flex;
     align-items: center;
     justify-content: center;
     width: 100%;
     height: 100%;
-    font-size: 18px;
     font-weight: 600;
     color: var(--text-muted);
     background: var(--bg-hover);
+    font-size: 18px;
 }
 
-.player-avatar-large .fallback {
-    font-size: 32px;
-}
-
-.player-avatar-small .fallback {
+.player-avatar.avatar-small .fallback-initials {
     font-size: 12px;
 }
 
-.avatar-fallback {
-    border-color: var(--text-dark);
+.player-avatar.avatar-large .fallback-initials {
+    font-size: 32px;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+    .player-avatar.avatar-large {
+        width: 72px;
+        height: 72px;
+    }
+}
+
+@media (max-width: 480px) {
+    .player-avatar.avatar-small {
+        width: 28px;
+        height: 28px;
+    }
+
+    .player-avatar.avatar-large {
+        width: 56px;
+        height: 56px;
+    }
 }

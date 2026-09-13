@@ -1,68 +1,57 @@
 // frontend/src/utils/playerPortraits.js
 
-// Map player names (as they appear in your JSON) to portrait filenames
+/**
+ * Player portrait lookup.
+ *
+ * Maps each player's IGN (as it appears in data/pros.json) to a portrait
+ * filename in frontend/public/portraits/. Values are filenames without
+ * extension — the .png suffix is added by getPlayerPortrait.
+ *
+ * Matching is exact (case-insensitive). There is no fuzzy or partial
+ * matching; if a name isn't here, the player falls back to their initial.
+ * This is deliberate — substring matching produced silent mismatches.
+ */
 export const PLAYER_PORTRAITS = {
-    // Format: "Player IGN as in JSON": "filename_without_extension"
+    // Top lane
     "kiin": "kiin",
-    "aierlanxiaozhu": "Breathe",
-    "The shy": "TheShy",
-    // Add more mappings as needed
+    "TOPKING": "siwoo",
+    "Athene": "zeus",
+    "PerfecT": "perfect",
+    "어리고싶다": "doran",
+    "songman": "clear",
+    "aierlanxiaozhu": "breathe",
+    "빈스토리": "bin",
+    "zdz": "zdz",
+    "The shy": "theshy",
+    "샤오 쑤A": "xiaoxu",
+    "burdol": "burdol",
+    "어쩌라고맞짱뜰까": "hoya",
+    "WE choukesi": "cube",
+    "leicingwaa": "keshi",
+    "Pure Imagination": "zuian",
 };
 
-// Helper function to find portrait for any player name
+/**
+ * Look up a portrait URL for a player by IGN.
+ *
+ * Matching is case-insensitive on the full name. Returns null if no
+ * mapping exists, letting the caller fall back to initials.
+ */
 export const getPlayerPortrait = (playerName) => {
-    console.log('🔍 getPlayerPortrait called with:', playerName);
-    
-    if (!playerName) {
-        console.log('⚠️ No player name provided');
-        return null;
-    }
-    
-    // 1. Try exact match first
+    if (!playerName) return null;
+
+    // Exact match
     if (PLAYER_PORTRAITS[playerName]) {
-        console.log('✅ Exact match found:', PLAYER_PORTRAITS[playerName]);
         return `/portraits/${PLAYER_PORTRAITS[playerName]}.png`;
     }
-    
-    // 2. Try case-insensitive match
-    const lowerName = playerName.toLowerCase();
+
+    // Case-insensitive match
+    const lower = playerName.toLowerCase();
     for (const [key, value] of Object.entries(PLAYER_PORTRAITS)) {
-        if (key.toLowerCase() === lowerName) {
-            console.log('✅ Case-insensitive match found:', key, '->', value);
+        if (key.toLowerCase() === lower) {
             return `/portraits/${value}.png`;
         }
     }
-    
-    // 3. Try to find by checking if playerName contains any key (case-insensitive)
-    for (const [key, value] of Object.entries(PLAYER_PORTRAITS)) {
-        const lowerKey = key.toLowerCase();
-        if (lowerName.includes(lowerKey) || lowerKey.includes(lowerName)) {
-            console.log('✅ Partial match found:', key, '->', value);
-            return `/portraits/${value}.png`;
-        }
-    }
-    
-    // 4. Try to extract the last word (e.g., "GEN Kiin" -> "Kiin")
-    const parts = playerName.split(' ');
-    if (parts.length > 1) {
-        const lastName = parts[parts.length - 1];
-        
-        // Try exact match on last name
-        if (PLAYER_PORTRAITS[lastName]) {
-            console.log('✅ Last name match found:', lastName, '->', PLAYER_PORTRAITS[lastName]);
-            return `/portraits/${PLAYER_PORTRAITS[lastName]}.png`;
-        }
-        
-        // Try case-insensitive match on last name
-        for (const [key, value] of Object.entries(PLAYER_PORTRAITS)) {
-            if (key.toLowerCase() === lastName.toLowerCase()) {
-                console.log('✅ Last name case-insensitive match found:', key, '->', value);
-                return `/portraits/${value}.png`;
-            }
-        }
-    }
-    
-    // 5. Fallback: use the player name directly (with URL encoding for spaces)
-    console.log('⚠️ No mapping found, using player name as fallback:', playerName);
-    return `/portraits/${encodeURIComponent(playerName)}.png`;
+
+    return null;
 };

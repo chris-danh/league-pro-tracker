@@ -1,25 +1,25 @@
 /* frontend/src/components/Assets.css */
 
 /* ============================================
-   SIZE VARIANTS (Shared by all)
+   SIZE VARIANTS
    ============================================ */
-.asset-small { 
-    width: 24px; 
-    height: 24px; 
+.asset-small {
+    width: 24px;
+    height: 24px;
 }
 
-.asset-medium { 
-    width: 32px; 
-    height: 32px; 
+.asset-medium {
+    width: 32px;
+    height: 32px;
 }
 
-.asset-large { 
-    width: 48px; 
-    height: 48px; 
+.asset-large {
+    width: 48px;
+    height: 48px;
 }
 
 /* ============================================
-   BASE ASSET STYLES (Shared by all)
+   BASE ASSET STYLES
    ============================================ */
 .champion-asset,
 .game-asset {
@@ -33,59 +33,21 @@
     transition: all 0.2s;
 }
 
-/* Images */
 .champion-asset img,
 .game-asset img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
 }
 
 /* ============================================
-   CHAMPION ASSET SPECIFIC
+   CHAMPION ASSET
    ============================================ */
 .champion-asset {
     border-radius: 50%;
 }
 
-/* frontend/src/components/Assets.css - Add these */
-
-/* Champion asset wrapper (icon + name) */
-.champion-asset-wrapper {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    overflow: visible;
-}
-
-.champion-asset-wrapper .champion-asset {
-    flex-shrink: 0;
-}
-
-.champion-asset-wrapper .asset-name {
-    font-size: 12px;
-    color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100px;
-}
-
-/* Update image display */
-.champion-asset img,
-.game-asset img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;  /* ← Prevents inline spacing */
-}
-
-.champion-asset .asset-name {
-    font-size: 10px;
-    color: var(--text-muted);
-}
-
-/* Champion fallback - shows letter */
 .champion-asset.fallback {
     background: var(--bg-hover);
     font-weight: 600;
@@ -93,92 +55,52 @@
     color: var(--text-muted);
 }
 
-.champion-asset.fallback.ability-Q { 
-    background: rgba(255, 80, 80, 0.25); 
+.champion-asset.fallback.ability-Q {
+    background: rgba(255, 80, 80, 0.25);
     border-color: rgba(255, 80, 80, 0.3);
     color: #ff6b6b;
 }
-.champion-asset.fallback.ability-W { 
-    background: rgba(80, 160, 255, 0.25); 
+
+.champion-asset.fallback.ability-W {
+    background: rgba(80, 160, 255, 0.25);
     border-color: rgba(80, 160, 255, 0.3);
     color: #64b4ff;
 }
-.champion-asset.fallback.ability-E { 
-    background: rgba(80, 255, 150, 0.25); 
+
+.champion-asset.fallback.ability-E {
+    background: rgba(80, 255, 150, 0.25);
     border-color: rgba(80, 255, 150, 0.3);
     color: #64ff96;
 }
-.champion-asset.fallback.ability-R { 
-    background: rgba(255, 200, 50, 0.25); 
+
+.champion-asset.fallback.ability-R {
+    background: rgba(255, 200, 50, 0.25);
     border-color: rgba(255, 200, 50, 0.3);
     color: #ffc832;
 }
 
 /* ============================================
-   GAME ASSET SPECIFIC
+   GAME ASSET (items, runes, spells)
    ============================================ */
 .game-asset {
     border-radius: 4px;
 }
 
-/* Rune specific - circular */
 .game-asset.rune {
     border-radius: 50%;
 }
 
-/* Empty state */
 .game-asset.empty {
-    color: #556677;
+    color: var(--text-dark);
     font-size: 10px;
     background: var(--bg-secondary);
 }
 
 /* ============================================
-   PLAYER AVATAR SPECIFIC
-   ============================================ */
-.player-avatar {
-    border-radius: 50%;
-    overflow: hidden;
-    flex-shrink: 0;
-    background: var(--bg-card);
-    border: 2px solid var(--border-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.player-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-.player-avatar .fallback {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    height: 100%;
-    font-size: 18px;
-    font-weight: 600;
-    color: var(--text-muted);
-    background: var(--bg-hover);
-}
-
-/* Avatar sizes */
-.avatar-small { width: 32px; height: 32px; }
-.avatar-medium { width: 48px; height: 48px; }
-.avatar-large { width: 80px; height: 80px; }
-
-.avatar-large .fallback { font-size: 32px; }
-.avatar-small .fallback { font-size: 12px; }
-
-/* ============================================
-   LOADING STATES (Shared)
+   LOADING STATE
    ============================================ */
 .champion-asset.loading,
-.game-asset.loading,
-.player-avatar.loading {
+.game-asset.loading {
     animation: pulse 1.5s ease-in-out infinite;
 }
 
@@ -194,8 +116,4 @@
     .asset-small { width: 20px; height: 20px; }
     .asset-medium { width: 28px; height: 28px; }
     .asset-large { width: 40px; height: 40px; }
-    
-    .avatar-small { width: 28px; height: 28px; }
-    .avatar-medium { width: 40px; height: 40px; }
-    .avatar-large { width: 64px; height: 64px; }
 }

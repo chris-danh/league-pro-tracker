@@ -1,5 +1,8 @@
 /* frontend/src/components/RegionSummary.css */
 
+/* ============================================
+   LAYOUT
+   ============================================ */
 .region-summary {
     padding: 24px 32px;
     max-width: 1200px;
@@ -15,20 +18,6 @@
     flex-wrap: wrap;
 }
 
-.back-button {
-    color: #88ccff;
-    text-decoration: none;
-    font-size: 14px;
-    padding: 6px 12px;
-    border-radius: 4px;
-    background: #1a2a3a;
-    transition: background 0.2s;
-}
-
-.back-button:hover {
-    background: #2a3a4a;
-}
-
 .region-title {
     display: flex;
     align-items: center;
@@ -38,19 +27,59 @@
 
 .region-title h2 {
     font-size: 26px;
-    color: #f0e6d2;
+    color: var(--text-primary);
     margin: 0;
 }
 
 .player-count {
-    background: #1a3a5a;
+    background: var(--bg-active);
     padding: 4px 12px;
     border-radius: 4px;
     font-size: 13px;
-    color: #88ccff;
+    color: var(--accent-blue);
 }
 
-/* Stats Grid */
+/* ============================================
+   NAVIGATION BUTTONS
+   ============================================ */
+.back-button {
+    color: var(--accent-blue);
+    text-decoration: none;
+    font-size: 14px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    background: var(--bg-card);
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.2s;
+}
+
+.back-button:hover {
+    background: var(--bg-hover);
+}
+
+.back-link {
+    color: var(--accent-blue);
+    text-decoration: none;
+    padding: 8px 20px;
+    border-radius: 4px;
+    background: var(--bg-card);
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 14px;
+    margin-top: 8px;
+    transition: background 0.2s;
+}
+
+.back-link:hover {
+    background: var(--bg-hover);
+}
+
+/* ============================================
+   STATS GRID
+   ============================================ */
 .region-stats-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -59,7 +88,7 @@
 }
 
 .stat-card {
-    background: #1a2a3a;
+    background: var(--bg-card);
     border-radius: 8px;
     padding: 16px 20px;
     display: flex;
@@ -79,24 +108,26 @@
 .stat-value {
     font-size: 24px;
     font-weight: 600;
-    color: #f0e6d2;
+    color: var(--text-primary);
 }
 
 .stat-label {
     font-size: 12px;
-    color: #8899aa;
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
-/* Player Grid */
+/* ============================================
+   PLAYER GRID
+   ============================================ */
 .region-players {
     margin-bottom: 32px;
 }
 
 .region-players h3 {
     font-size: 18px;
-    color: #f0e6d2;
+    color: var(--text-primary);
     margin-bottom: 16px;
 }
 
@@ -107,11 +138,11 @@
 }
 
 .player-card {
-    background: #1a2a3a;
+    background: var(--bg-card);
     border-radius: 8px;
     padding: 16px;
     text-decoration: none;
-    color: #e0e0e0;
+    color: var(--text-primary);
     transition: all 0.2s;
     display: flex;
     align-items: center;
@@ -119,25 +150,8 @@
 }
 
 .player-card:hover {
-    background: #2a3a4a;
+    background: var(--bg-hover);
     transform: translateY(-2px);
-}
-
-.player-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #2a3a5a;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.player-avatar-text {
-    font-size: 18px;
-    font-weight: 600;
-    color: #88ccff;
 }
 
 .player-info {
@@ -146,111 +160,222 @@
 }
 
 .player-name {
-    font-size: 15px;
-    font-weight: 500;
-    color: #f0e6d2;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.player-team {
-    font-size: 12px;
-    color: #8899aa;
+.player-team-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 3px;
+    background: var(--bg-active);
+    color: var(--accent-blue);
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
 }
 
-.player-tag {
+.player-display-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.player-ign {
     font-size: 11px;
-    color: #556677;
+    color: var(--text-dark);
+    font-family: monospace;
+    margin-top: 2px;
 }
 
-/* Region Champions */
+/* ============================================
+   CHAMPION POOL
+   ============================================ */
 .region-champions {
-    background: #1a2a3a;
+    background: var(--bg-card);
     border-radius: 8px;
     padding: 20px;
 }
 
 .region-champions h3 {
     font-size: 18px;
-    color: #f0e6d2;
+    color: var(--text-primary);
     margin-bottom: 12px;
 }
 
 .placeholder-text {
-    color: #667788;
+    color: var(--text-muted);
     font-size: 14px;
     padding: 20px 0;
     text-align: center;
 }
 
-.placeholder-text small {
-    color: #556677;
-}
-
-/* Loading State */
-.region-summary-loading {
+/* ============================================
+   CHAMPION META
+   ============================================ */
+.champion-meta-list {
     display: flex;
     flex-direction: column;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.champion-meta-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 10px 12px;
+}
+
+.champion-meta-header {
+    display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 60px 20px;
-    color: #667788;
-    gap: 16px;
+    gap: 12px;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
 }
 
-.loading-spinner {
-    width: 40px;
-    height: 40px;
-    border: 3px solid #2a3a4a;
-    border-top-color: #88ccff;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
+.champion-meta-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
 }
 
-@keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
+.champion-meta-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
 }
 
-/* Empty State */
+.champion-meta-stats {
+    font-size: 11px;
+    color: var(--text-muted);
+}
+
+.champion-meta-winrate {
+    font-size: 15px;
+    font-weight: 700;
+    min-width: 55px;
+    text-align: right;
+}
+
+.champion-meta-winrate.positive {
+    color: var(--accent-green);
+}
+
+.champion-meta-winrate.negative {
+    color: var(--accent-red);
+}
+
+.champion-meta-players {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.champion-meta-player {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    background: var(--bg-card);
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 12px;
+    transition: background 0.15s;
+}
+
+.champion-meta-player:hover {
+    background: var(--bg-hover);
+}
+
+.champion-meta-player-name {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.champion-meta-player-games {
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.champion-meta-player-wr {
+    font-weight: 600;
+}
+
+.champion-meta-player-wr.positive {
+    color: var(--accent-green);
+}
+
+.champion-meta-player-wr.negative {
+    color: var(--accent-red);
+}
+
+/* ============================================
+   EMPTY STATE
+   ============================================ */
 .region-summary-empty {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 60px 20px;
-    color: #667788;
+    color: var(--text-muted);
     gap: 12px;
+    min-height: 400px;
 }
 
 .region-summary-empty h2 {
-    color: #f0e6d2;
+    color: var(--text-primary);
+    font-size: 28px;
+    margin-bottom: 8px;
 }
 
-.back-link {
-    color: #88ccff;
-    text-decoration: none;
-    padding: 8px 16px;
+.region-summary-empty .empty-icon {
+    font-size: 64px;
+    margin: 20px 0;
+}
+
+.region-summary-empty .hint {
+    font-size: 13px;
+    color: var(--text-dark);
+    max-width: 400px;
+    text-align: center;
+    line-height: 1.6;
+}
+
+.region-summary-empty code {
+    background: var(--bg-card);
+    padding: 2px 8px;
     border-radius: 4px;
-    background: #1a2a3a;
-    transition: background 0.2s;
+    font-size: 12px;
+    color: var(--accent-blue);
+    display: inline-block;
+    margin: 2px 0;
 }
 
-.back-link:hover {
-    background: #2a3a4a;
-}
-
-/* Responsive */
+/* ============================================
+   RESPONSIVE
+   ============================================ */
 @media (max-width: 768px) {
+    .region-summary {
+        padding: 16px;
+    }
+
     .region-stats-grid {
         grid-template-columns: repeat(2, 1fr);
     }
 
     .player-grid {
         grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    }
-
-    .region-summary {
-        padding: 16px;
     }
 }
 
@@ -270,99 +395,17 @@
     .region-title h2 {
         font-size: 20px;
     }
-}
 
-/* Add to RegionSummary.css - Style buttons like links */
-.back-button {
-    color: #88ccff;
-    text-decoration: none;
-    font-size: 14px;
-    padding: 6px 12px;
-    border-radius: 4px;
-    background: #1a2a3a;
-    transition: background 0.2s;
-    border: none;
-    cursor: pointer;
-    font-family: inherit;
-}
+    .champion-meta-card {
+        padding: 8px 10px;
+    }
 
-.back-button:hover {
-    background: #2a3a4a;
-}
+    .champion-meta-name {
+        font-size: 14px;
+    }
 
-.back-link {
-    color: #88ccff;
-    text-decoration: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    background: #1a2a3a;
-    transition: background 0.2s;
-    border: none;
-    cursor: pointer;
-    font-family: inherit;
-    font-size: 14px;
-}
-
-.back-link:hover {
-    background: #2a3a4a;
-}
-
-/* Add to RegionSummary.css */
-
-.region-summary-empty {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 60px 20px;
-    color: #667788;
-    gap: 12px;
-    min-height: 400px;
-}
-
-.region-summary-empty h2 {
-    color: #f0e6d2;
-    font-size: 28px;
-    margin-bottom: 8px;
-}
-
-.region-summary-empty .empty-icon {
-    font-size: 64px;
-    margin: 20px 0;
-}
-
-.region-summary-empty .hint {
-    font-size: 13px;
-    color: #556677;
-    max-width: 400px;
-    text-align: center;
-    line-height: 1.6;
-}
-
-.region-summary-empty code {
-    background: #1a2a3a;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    color: #88ccff;
-    display: inline-block;
-    margin: 2px 0;
-}
-
-.back-link {
-    color: #88ccff;
-    text-decoration: none;
-    padding: 8px 20px;
-    border-radius: 4px;
-    background: #1a2a3a;
-    transition: background 0.2s;
-    border: none;
-    cursor: pointer;
-    font-family: inherit;
-    font-size: 14px;
-    margin-top: 8px;
-}
-
-.back-link:hover {
-    background: #2a3a4a;
+    .champion-meta-winrate {
+        font-size: 13px;
+        min-width: 45px;
+    }
 }

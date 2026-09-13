@@ -2,10 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import './App.css';
-import { 
-    getPlayers, 
-    getPracticeStats, 
-    refreshPlayer, 
+import {
+    getPlayers,
+    refreshPlayer,
     getChampionMap,
     getPlayerChampions,
     getChampionDetails,
@@ -19,7 +18,6 @@ function AppContent() {
     const [players, setPlayers] = useState([]);
     const [championMap, setChampionMap] = useState(new Map());
     const [selectedPlayer, setSelectedPlayer] = useState(null);
-    const [practiceData, setPracticeData] = useState(null);
     const [champions, setChampions] = useState([]);
     const [selectedChampionId, setSelectedChampionId] = useState(null);
     const [championDetails, setChampionDetails] = useState(null);
@@ -28,7 +26,6 @@ function AppContent() {
     const [totalMatches, setTotalMatches] = useState(0);
     const [loading, setLoading] = useState({
         players: true,
-        practice: false,
         champions: false,
         championDetails: false,
         matches: false,
@@ -44,7 +41,6 @@ function AppContent() {
     // THEME TOGGLE
     // ============================================
     useEffect(() => {
-        // Check for saved theme preference
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme) {
             setTheme(savedTheme);
@@ -102,17 +98,25 @@ function AppContent() {
         const path = location.pathname;
         const match = path.match(/\/player\/(.+)/);
         if (match && match[1]) {
-            const playerName = decodeURIComponent(match[1]);
-            if (selectedPlayer && selectedPlayer.name.toLowerCase() === playerName.toLowerCase()) {
+            const urlSlug = decodeURIComponent(match[1]);
+
+            // If already showing this player, do nothing.
+            if (selectedPlayer && selectedPlayer.display_name
+                    && selectedPlayer.display_name.toLowerCase() === urlSlug.toLowerCase()) {
                 return;
             }
-            const found = players.find(p => p.name.toLowerCase() === playerName.toLowerCase());
+
+            // Find the player whose display_name matches the URL slug.
+            const found = players.find(
+                p => p.display_name && p.display_name.toLowerCase() === urlSlug.toLowerCase()
+            );
             if (found) {
-                console.log('📌 Syncing selectedPlayer with URL:', found.name);
                 setSelectedPlayer(found);
                 handleSelectPlayer(found);
             }
         }
+        // Intentionally only re-run on URL change and player list load.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [location.pathname, players]);
 
     // ============================================
@@ -121,19 +125,6 @@ function AppContent() {
     const getChampionName = (id) => {
         const info = championMap.get(id);
         return info?.name || `Champion ${id}`;
-    };  
-
-    const loadPracticeData = async (puuid) => {
-        setLoading(prev => ({ ...prev, practice: true }));
-        try {
-            const data = await getPracticeStats(puuid);
-            setPracticeData(data);
-        } catch (error) {
-            console.error('Failed to load practice stats:', error);
-            setPracticeData(null);
-        } finally {
-            setLoading(prev => ({ ...prev, practice: false }));
-        }
     };
 
     const loadChampions = async (puuid) => {
@@ -188,23 +179,29 @@ function AppContent() {
     // EVENT HANDLERS
     // ============================================
     const handleSelectPlayer = async (player) => {
-        console.log('📌 Selecting player:', player.name);
         setSelectedPlayer(player);
         setSelectedChampionId(null);
         setChampionDetails(null);
         setMatches([]);
         setMatchPage(1);
-        
-        navigate(`/player/${encodeURIComponent(player.name)}`);
-        
+
+        const slug = player.display_name || player.name;
+        navigate(`/player/${encodeURIComponent(slug)}`);
+
         await Promise.all([
-            loadPracticeData(player.puuid),
             loadChampions(player.puuid),
             loadMatches(player.puuid, 1)
         ]);
     };
 
     const handleSelectChampion = async (championId) => {
+        // Clicking the currently-selected champion deselects it.
+        if (selectedChampionId === championId) {
+            setSelectedChampionId(null);
+            setChampionDetails(null);
+            return;
+        }
+
         setSelectedChampionId(championId);
         if (selectedPlayer) {
             await loadChampionDetails(selectedPlayer.puuid, championId);
@@ -218,54 +215,45 @@ function AppContent() {
     };
 
     const handleRefresh = async () => {
-        console.log('🔄 handleRefresh called in App!');
-        console.log('selectedPlayer:', selectedPlayer);
-        
         if (!selectedPlayer) {
-            console.log('⚠️ No player selected');
             alert('Please select a player first.');
             return;
         }
 
-        console.log('📡 Calling refresh API for:', selectedPlayer.name);
         setLoading(prev => ({ ...prev, refresh: true }));
-        
+
         try {
             const result = await refreshPlayer(
-                selectedPlayer.name, 
-                selectedPlayer.tag, 
+                selectedPlayer.name,
+                selectedPlayer.tag,
                 20,
                 false
             );
-            
-            console.log('Refresh result:', result);
-            
+
             if (result.success === false) {
                 alert(`ℹ️ ${result.message || 'No new matches found'}`);
                 setLoading(prev => ({ ...prev, refresh: false }));
                 return;
             }
-            
+
             if (result.matches_saved === 0 && result.matches_fetched === 0) {
                 alert('ℹ️ No new matches found for this player.');
                 setLoading(prev => ({ ...prev, refresh: false }));
                 await Promise.all([
-                    loadPracticeData(selectedPlayer.puuid),
                     loadChampions(selectedPlayer.puuid),
                     loadMatches(selectedPlayer.puuid, 1)
                 ]);
                 return;
             }
-            
+
             await Promise.all([
-                loadPracticeData(selectedPlayer.puuid),
                 loadChampions(selectedPlayer.puuid),
                 loadMatches(selectedPlayer.puuid, 1)
             ]);
-            
+
             const message = result.message || `✅ Refreshed! ${result.matches_saved || 0} new matches saved.`;
             alert(message);
-            
+
         } catch (error) {
             console.error('Failed to refresh:', error);
             if (error.response && error.response.status === 401) {
@@ -351,7 +339,7 @@ function AppContent() {
                             onSelectPlayer={handleSelectPlayer}
                         />
                     } />
-                    
+
                     <Route path="/player/:playerName" element={
                         <PlayerDetail
                             players={players}
@@ -370,11 +358,12 @@ function AppContent() {
                             onBack={handleBack}
                         />
                     } />
-                    
+
                     <Route path="/region/:regionCode" element={
                         <RegionSummary
                             groupedPlayers={groupedPlayers}
                             getChampionName={getChampionName}
+                            championMap={championMap}
                         />
                     } />
                 </Routes>
@@ -384,18 +373,10 @@ function AppContent() {
             <footer className="footer">
                 <div className="footer-content">
                     <div className="disclaimer">
-                        <span>
-                            This website is not affiliated with Riot Games. 
-                            All game data and assets are property of Riot Games, Inc.
-                            <br />
-                            <a href="#" onClick={(e) => e.preventDefault()}>Privacy Policy</a>
-                            {' • '}
-                            <a href="#" onClick={(e) => e.preventDefault()}>Contact</a>
-                        </span>
+                        This website is not affiliated with Riot Games.
+                        All game data and assets are property of Riot Games, Inc.
                     </div>
                     <div className="footer-links">
-                        <a href="#" onClick={(e) => e.preventDefault()}>Privacy Policy</a>
-                        <a href="mailto:your-email@example.com">Contact</a>
                         <span>© {new Date().getFullYear()}</span>
                     </div>
                 </div>

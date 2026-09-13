@@ -23,17 +23,23 @@ const PlayerDetail = ({
     onRefresh,
     onBack
 }) => {
-    const { playerName } = useParams();
+    const { playerName } = useParams();   // URL slug (now display_name)
     const navigate = useNavigate();
     const [player, setPlayer] = useState(null);
 
     useEffect(() => {
-        if (selectedPlayer && selectedPlayer.name.toLowerCase() === playerName.toLowerCase()) {
+        const slug = (playerName || '').toLowerCase();
+
+        if (selectedPlayer && selectedPlayer.display_name
+                && selectedPlayer.display_name.toLowerCase() === slug) {
             setPlayer(selectedPlayer);
             return;
         }
+
         if (players && players.length > 0) {
-            const found = players.find(p => p.name.toLowerCase() === playerName.toLowerCase());
+            const found = players.find(
+                p => p.display_name && p.display_name.toLowerCase() === slug
+            );
             setPlayer(found || null);
         }
     }, [playerName, players, selectedPlayer]);
@@ -45,7 +51,7 @@ const PlayerDetail = ({
         navigate('/');
     };
 
-    // ✅ Calculate hasMore
+    // Calculate hasMore
     const hasMore = matches.length < totalMatches;
 
     if (loading.players && !player) {
@@ -63,30 +69,35 @@ const PlayerDetail = ({
     }
 
     return (
-    <div className="player-detail">
-        {/* Header */}
-        <div className="player-detail-header">
-            <button onClick={handleBack} className="back-button">← Back</button>
-            <div className="player-detail-info">
-                <PlayerAvatar player={player} size="large" />
-                <div className="player-info-text">
-                    {/* Line 1: Player Name (e.g., "GEN Kiin" or "T1 Faker") */}
-                    <h2>{player.name}</h2>
-                    {/* Line 2: Region + IGN + Tagline */}
-                    <div className="player-meta">
-                        <span className="region-badge">{player.region}</span>
-                        <span className="ign-tag">{player.ign} #{player.tag}</span>
+        <div className="player-detail">
+            {/* Header */}
+            <div className="player-detail-header">
+                <button onClick={handleBack} className="back-button">← Back</button>
+                <div className="player-detail-info">
+                    <PlayerAvatar player={player} size="large" />
+                    <div className="player-info-text">
+                        <h2>
+                            {player.team && (
+                                <span className="player-team-badge">{player.team}</span>
+                            )}
+                            <span className="player-display-name">
+                                {player.display_name || player.name}
+                            </span>
+                        </h2>
+                        <div className="player-meta">
+                            <span className="region-badge">{player.region}</span>
+                            <span className="ign-tag">{player.name} #{player.tag}</span>
+                        </div>
                     </div>
                 </div>
+                <button
+                    className={`refresh-btn ${loading.refresh ? 'loading' : ''}`}
+                    onClick={onRefresh}
+                    disabled={loading.refresh || !player}
+                >
+                    {loading.refresh ? '⏳ Fetching...' : '🔄 Refresh Data'}
+                </button>
             </div>
-            <button
-                className={`refresh-btn ${loading.refresh ? 'loading' : ''}`}
-                onClick={onRefresh}
-                disabled={loading.refresh || !player}
-            >
-                {loading.refresh ? '⏳ Fetching...' : '🔄 Refresh Data'}
-            </button>
-        </div>
 
             {/* Two-column layout */}
             <div className="player-content">
@@ -103,14 +114,16 @@ const PlayerDetail = ({
                         />
                     </div>
 
-                    <ChampionDetail
-                        details={championDetails}
-                        loading={loading.championDetails}
-                        getChampionName={getChampionName}
-                        championMap={championMap}
-                        puuid={player?.puuid}
-                        onRefresh={onRefresh}
-                    />
+                    {selectedChampionId && (
+                        <ChampionDetail
+                            details={championDetails}
+                            loading={loading.championDetails}
+                            getChampionName={getChampionName}
+                            championMap={championMap}
+                            puuid={player?.puuid}
+                            onRefresh={onRefresh}
+                        />
+                    )}
                 </div>
 
                 {/* Right column */}

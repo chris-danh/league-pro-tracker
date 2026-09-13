@@ -1,9 +1,19 @@
 // frontend/src/components/ChampionDetail.jsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './ChampionDetail.css';
 import ChampionAsset from './ChampionAsset';
 import GameAsset from './GameAsset';
-import { getChampionDetails, getCoreItems } from '../api/client';
+import {
+    getChampionDetails,
+    getCoreItems,
+    getRuneMap,
+    getRuneName,
+} from '../api/client';
+
+const formatCount = (occurrences, totalGames) => {
+    if (!totalGames || totalGames === 0) return '0 / 0';
+    return `${occurrences} / ${totalGames}`;
+};
 
 const ChampionDetail = ({
     details,
@@ -11,7 +21,6 @@ const ChampionDetail = ({
     getChampionName,
     championMap,
     puuid,
-    onRefresh
 }) => {
     const [selectedMatchup, setSelectedMatchup] = useState(null);
     const [showSkillOrder, setShowSkillOrder] = useState(true);
@@ -21,6 +30,15 @@ const ChampionDetail = ({
         first: [], second: [], third: [], fourth: []
     });
     const [coreItemsLoading, setCoreItemsLoading] = useState(false);
+    const [expandedKeystone, setExpandedKeystone] = useState(null);
+    const [runeMapReady, setRuneMapReady] = useState(false);
+
+    // Preload the rune map so keystone names render on first paint.
+    useEffect(() => {
+        getRuneMap()
+            .then(() => setRuneMapReady(true))
+            .catch(() => setRuneMapReady(true));
+    }, []);
 
     const fetchCoreItems = useCallback(async (championId, enemyChampionId) => {
         if (!puuid || !championId) return;
@@ -38,26 +56,28 @@ const ChampionDetail = ({
     useEffect(() => {
         setFilteredDetails(details);
         setSelectedMatchup(null);
+        setExpandedKeystone(null);
         if (details?.champion_id && puuid) {
             fetchCoreItems(details.champion_id, null);
         }
     }, [details, puuid, fetchCoreItems]);
 
-    const formatCount = (occurrences, totalGames) => {
-        if (!totalGames || totalGames === 0) return '0 / 0';
-        return `${occurrences} / ${totalGames}`;
+    const clearMatchupFilter = () => {
+        setSelectedMatchup(null);
+        setExpandedKeystone(null);
+        setFilteredDetails(details);
+        fetchCoreItems(details?.champion_id, null);
     };
 
     const handleMatchupClick = async (enemyChampionId) => {
         if (!puuid) return;
         if (selectedMatchup === enemyChampionId) {
-            setSelectedMatchup(null);
-            setFilteredDetails(details);
-            fetchCoreItems(details?.champion_id, null);
+            clearMatchupFilter();
             return;
         }
         setFilterLoading(true);
         setSelectedMatchup(enemyChampionId);
+        setExpandedKeystone(null);
         try {
             const championId = details?.champion_id;
             const data = await getChampionDetails(puuid, championId, enemyChampionId, null);
@@ -69,6 +89,67 @@ const ChampionDetail = ({
             setFilterLoading(false);
         }
     };
+
+    // Group rune pages by keystone and canonicalize secondary-rune ordering
+    // so [A, B] and [B, A] collapse into the same variation.
+    const keystoneList = useMemo(() => {
+        const runePages = filteredDetails?.rune_pages;
+        if (!runePages || runePages.length === 0) return [];
+
+        const byKeystone = {};
+        runePages.forEach(entry => {
+            const keystoneId = entry.page?.keystone;
+            if (!keystoneId) return;
+
+            if (!byKeystone[keystoneId]) {
+                byKeystone[keystoneId] = {
+                    keystone: keystoneId,
+                    total_usage: 0,
+                    total_wins: 0,
+                    variations: {},
+                };
+            }
+
+            const group = byKeystone[keystoneId];
+            group.total_usage += entry.usage_count;
+            group.total_wins += (entry.usage_count * entry.win_rate) / 100;
+
+            // Sort secondary runes so order doesn't create distinct variations.
+            const sortedSecondary = [...(entry.page.secondary_runes || [])].sort((a, b) => a - b);
+            const shards = entry.page.shards || {};
+            const shardsSig = [
+                shards.offense || 0,
+                shards.flex || 0,
+                shards.defense || 0,
+            ].join(',');
+            const sig = `${sortedSecondary.join(',')}|${shardsSig}`;
+
+            if (!group.variations[sig]) {
+                group.variations[sig] = {
+                    secondary_runes: sortedSecondary,
+                    secondary_style: entry.page.secondary_style,
+                    shards: shards,
+                    usage_count: 0,
+                    wins: 0,
+                };
+            }
+            group.variations[sig].usage_count += entry.usage_count;
+            group.variations[sig].wins += (entry.usage_count * entry.win_rate) / 100;
+        });
+
+        return Object.values(byKeystone)
+            .map(g => ({
+                ...g,
+                win_rate: g.total_usage > 0 ? (g.total_wins / g.total_usage) * 100 : 0,
+                variations: Object.values(g.variations)
+                    .map(v => ({
+                        ...v,
+                        win_rate: v.usage_count > 0 ? (v.wins / v.usage_count) * 100 : 0,
+                    }))
+                    .sort((a, b) => b.usage_count - a.usage_count),
+            }))
+            .sort((a, b) => b.total_usage - a.total_usage);
+    }, [filteredDetails]);
 
     if (loading || filterLoading || coreItemsLoading) {
         return <div className="loading-text">Loading champion details...</div>;
@@ -84,7 +165,6 @@ const ChampionDetail = ({
 
     const {
         base_stats,
-        rune_pages,
         stat_shards,
         spells,
         matchups,
@@ -111,11 +191,7 @@ const ChampionDetail = ({
                     {selectedMatchup && (
                         <button
                             className="clear-filter-btn"
-                            onClick={() => {
-                                setSelectedMatchup(null);
-                                setFilteredDetails(details);
-                                fetchCoreItems(details?.champion_id, null);
-                            }}
+                            onClick={clearMatchupFilter}
                         >
                             Clear Filter
                         </button>
@@ -140,10 +216,6 @@ const ChampionDetail = ({
                     <span className="stat-value">
                         {base_stats.avg_kills}/{base_stats.avg_deaths}/{base_stats.avg_assists}
                     </span>
-                </div>
-                <div className="stat-card">
-                    <span className="stat-label">Avg CS</span>
-                    <span className="stat-value">{base_stats.avg_cs}</span>
                 </div>
             </div>
 
@@ -363,56 +435,85 @@ const ChampionDetail = ({
                 </div>
             )}
 
-            {/* ============================================
-                RUNE PAGES (grouped by page)
-                ============================================ */}
-            {rune_pages && rune_pages.length > 0 && (
+            {/* Keystones (grouped, expandable) */}
+            {keystoneList.length > 0 && (
                 <div className="detail-section">
-                    <h4>Rune Pages</h4>
-                    <div className="rune-pages-container">
-                        {rune_pages.map((pageEntry, idx) => {
-                            const page = pageEntry.page;
+                    <h4>Keystones</h4>
+                    <div className="keystone-list">
+                        {keystoneList.map((ks) => {
+                            const isExpanded = expandedKeystone === ks.keystone;
                             return (
-                                <div key={idx} className="rune-page">
-                                    <div className="rune-page-header">
-                                        <span className="rune-page-usage">
-                                            {formatCount(pageEntry.usage_count, totalGames)}
+                                <div key={ks.keystone} className="keystone-group">
+                                    <div
+                                        className={`keystone-header ${isExpanded ? 'expanded' : ''}`}
+                                        onClick={() => setExpandedKeystone(isExpanded ? null : ks.keystone)}
+                                    >
+                                        <GameAsset type="rune" id={ks.keystone} size="medium" />
+                                        <span className="keystone-name">
+                                            {runeMapReady
+                                                ? (getRuneName(ks.keystone) || `Rune ${ks.keystone}`)
+                                                : '...'}
                                         </span>
-                                        <span className={`rune-page-winrate ${pageEntry.win_rate >= 50 ? 'positive' : 'negative'}`}>
-                                            {pageEntry.win_rate}%
+                                        <span className="keystone-usage">
+                                            {formatCount(ks.total_usage, totalGames)}
+                                        </span>
+                                        <span className={`keystone-winrate ${ks.win_rate >= 50 ? 'positive' : 'negative'}`}>
+                                            {ks.win_rate.toFixed(1)}%
+                                        </span>
+                                        <span className="keystone-expand">
+                                            {isExpanded ? '▼' : '▶'}
                                         </span>
                                     </div>
 
-                                    {/* Primary tree */}
-                                    {page.primary_runes && page.primary_runes.length > 0 && (
-                                        <div className="rune-page-row primary-tree">
-                                            {page.primary_runes.map((runeId, i) => (
-                                                <GameAsset key={`p-${i}`} type="rune" id={runeId} size="small" />
+                                    {isExpanded && (
+                                        <div className="keystone-variations">
+                                            {ks.variations.map((v, idx) => (
+                                                <div key={idx} className="rune-variation">
+                                                    <div className="rune-variation-header">
+                                                        <span className="rune-variation-usage">
+                                                            {formatCount(v.usage_count, totalGames)}
+                                                        </span>
+                                                        <span className={`rune-variation-winrate ${v.win_rate >= 50 ? 'positive' : 'negative'}`}>
+                                                            {v.win_rate.toFixed(1)}%
+                                                        </span>
+                                                    </div>
+                                                    <div className="rune-variation-row">
+                                                        {v.secondary_runes.map((runeId, i) => (
+                                                            <GameAsset
+                                                                key={`sec-${i}`}
+                                                                type="rune"
+                                                                id={runeId}
+                                                                size="small"
+                                                            />
+                                                        ))}
+                                                        <span className="rune-variation-divider" />
+                                                        {v.shards.offense > 0 && (
+                                                            <GameAsset
+                                                                type="rune"
+                                                                id={v.shards.offense}
+                                                                slot="shard_offense"
+                                                                size="small"
+                                                            />
+                                                        )}
+                                                        {v.shards.flex > 0 && (
+                                                            <GameAsset
+                                                                type="rune"
+                                                                id={v.shards.flex}
+                                                                slot="shard_flex"
+                                                                size="small"
+                                                            />
+                                                        )}
+                                                        {v.shards.defense > 0 && (
+                                                            <GameAsset
+                                                                type="rune"
+                                                                id={v.shards.defense}
+                                                                slot="shard_defense"
+                                                                size="small"
+                                                            />
+                                                        )}
+                                                    </div>
+                                                </div>
                                             ))}
-                                        </div>
-                                    )}
-
-                                    {/* Secondary tree */}
-                                    {page.secondary_runes && page.secondary_runes.length > 0 && (
-                                        <div className="rune-page-row secondary-tree">
-                                            {page.secondary_runes.map((runeId, i) => (
-                                                <GameAsset key={`s-${i}`} type="rune" id={runeId} size="small" />
-                                            ))}
-                                        </div>
-                                    )}
-
-                                    {/* Stat shards */}
-                                    {page.shards && (
-                                        <div className="rune-page-row shards">
-                                            {page.shards.offense > 0 && (
-                                                <GameAsset type="rune" id={page.shards.offense} slot="shard_offense" size="small" />
-                                            )}
-                                            {page.shards.flex > 0 && (
-                                                <GameAsset type="rune" id={page.shards.flex} slot="shard_flex" size="small" />
-                                            )}
-                                            {page.shards.defense > 0 && (
-                                                <GameAsset type="rune" id={page.shards.defense} slot="shard_defense" size="small" />
-                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -422,8 +523,8 @@ const ChampionDetail = ({
                 </div>
             )}
 
-            {/* Stat Shards (flat list — kept as fallback if rune_pages not present) */}
-            {(!rune_pages || rune_pages.length === 0) && stat_shards && stat_shards.length > 0 && (
+            {/* Stat Shards fallback (only if keystone list is empty) */}
+            {keystoneList.length === 0 && stat_shards && stat_shards.length > 0 && (
                 <div className="detail-section">
                     <h4>Stat Shards</h4>
                     <div className="rune-grid">
@@ -472,11 +573,7 @@ const ChampionDetail = ({
                     {selectedMatchup && (
                         <button
                             className="clear-filter-btn"
-                            onClick={() => {
-                                setSelectedMatchup(null);
-                                setFilteredDetails(details);
-                                fetchCoreItems(details?.champion_id, null);
-                            }}
+                            onClick={clearMatchupFilter}
                         >
                             Clear Filter
                         </button>
